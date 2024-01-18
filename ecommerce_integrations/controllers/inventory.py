@@ -2,9 +2,11 @@ from typing import List, Tuple
 
 import frappe
 from frappe import _dict
-from frappe.utils import now
+from frappe.utils import now,get_datetime, format_time, formatdate, getdate, nowdate
 from frappe.utils.nestedset import get_descendants_of
 
+import erpnext
+from erpnext.stock.utils import (get_incoming_rate)
 
 def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict]:
 	"""
@@ -18,7 +20,7 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 	"""
 	data = frappe.db.sql(
 		f"""
-			SELECT ei.name as ecom_item, bin.item_code as item_code, integration_item_code, variant_id, actual_qty, warehouse, reserved_qty
+			SELECT ei.name as ecom_item,0 as cost, bin.item_code as item_code, integration_item_code, variant_id, actual_qty, warehouse, reserved_qty
 			FROM `tabEcommerce Item` ei
 				JOIN tabBin bin
 				ON ei.erpnext_item_code = bin.item_code
@@ -29,7 +31,23 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 		values=warehouses + (integration,),
 		as_dict=1,
 	)
-
+	setting = frappe.get_doc('Shopify Setting')
+	times=get_datetime()
+	posting_time=times.strftime("%H:%M:%S")
+	posting_date=getdate(nowdate())
+	for dt in data:
+		cost=0
+		if dt.actual_qty > 0:
+			cost = get_incoming_rate({
+                                "item_code": dt.item_code,
+                                "warehouse": dt.warehouse,
+                                "posting_date": posting_date,
+                                "posting_time": posting_time,
+                                "qty": -1 * dt.actual_qty,
+                                'company':setting.company
+								})
+		dt.cost=cost or 0
+		
 	return data
 
 
