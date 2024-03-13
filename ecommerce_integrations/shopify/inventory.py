@@ -4,6 +4,7 @@ import frappe
 from frappe.utils import cint, create_batch, now
 from pyactiveresource.connection import ResourceNotFound
 from shopify.resources import InventoryLevel, Variant
+import requests
 
 from ecommerce_integrations.controllers.inventory import (
 	get_inventory_levels,
@@ -52,9 +53,12 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 					inventory_item_id=inventory_id,
 					# shopify doesn't support fractional quantity
 					available=cint(d.actual_qty) - cint(d.reserved_qty),
+					cost=d.cost,
 				)
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
 				d.status = "Success"
+				if d.cost > 0:
+					update_shopify_product_cost(d.integration_item_code, d.variant_id, d.cost)
 			except ResourceNotFound:
 				# Variant or location is deleted, mark as last synced and ignore.
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
@@ -66,6 +70,39 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 			frappe.db.commit()
 
 		_log_inventory_update_status(inventory_sync_batch)
+
+def update_shopify_product_cost(shopify_product_id, variant_id, new_cost)-> None:
+	setting = frappe.get_doc('Shopify Setting')
+	shopify_api_key = setting.shared_secret
+	shopify_api_password = setting.get_password('password')
+	shopify_store_url = setting.shopify_url
+	data = {
+		"product": {
+			"id": shopify_product_id,
+			"variants": [
+				{
+					"id": variant_id,
+					"cost": new_cost
+					}
+				]
+			}
+		}
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/products/{shopify_product_id}.json"
+	headers = {
+		"Content-Type": "application/json",
+		"X-Shopify-Access-Token": shopify_api_password
+		}
+	try:
+		response = requests.put(api_endpoint, json=data, headers=headers)
+		response.raise_for_status()
+		response_data = response.json()
+		if "product" in response_data:
+			create_shopify_log(method="update_cost_on_shopify", status='Success', message=str(data))
+		else:
+			create_shopify_log(method="update_cost_on_shopify", status='Failed', message=str(response_data))
+	except requests.exceptions.RequestException as e:
+		ermsg=str(api_endpoint)+str(headers)+str(data)+str(e)
+		create_shopify_log(method="update_cost_on_shopify", status='Error', message=ermsg)
 
 
 def _log_inventory_update_status(inventory_levels) -> None:
