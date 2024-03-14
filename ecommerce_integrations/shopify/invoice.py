@@ -51,8 +51,14 @@ def create_sales_invoice(shopify_order, setting, so):
 		set_cost_center(sales_invoice.items, setting.cost_center)
 		sales_invoice.insert(ignore_mandatory=True)
 		sales_invoice.submit()
+		
 		if sales_invoice.grand_total > 0:
-			make_payament_entry_against_sales_invoice(sales_invoice, setting, posting_date)
+			bank_account=setting.cash_bank_account
+			if 'stripe' in shopify_order.get("payment_gateway_names"):
+				bank_account=setting.stripe_account
+			if 'Custom (POS)' in shopify_order.get("payment_gateway_names"):
+				bank_account=setting.network_solution_card_account 
+			make_payament_entry_against_sales_invoice(sales_invoice, bank_account, posting_date)
 
 		if shopify_order.get("note"):
 			sales_invoice.add_comment(text=f"Order Note: {shopify_order.get('note')}")
@@ -63,10 +69,10 @@ def set_cost_center(items, cost_center):
 		item.cost_center = cost_center
 
 
-def make_payament_entry_against_sales_invoice(doc, setting, posting_date=None):
+def make_payament_entry_against_sales_invoice(doc, bank_account, posting_date=None):
 	from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-	payment_entry = get_payment_entry(doc.doctype, doc.name, bank_account=setting.cash_bank_account)
+	payment_entry = get_payment_entry(doc.doctype, doc.name, bank_account)
 	payment_entry.flags.ignore_mandatory = True
 	payment_entry.reference_no = doc.name
 	payment_entry.posting_date = posting_date or nowdate()

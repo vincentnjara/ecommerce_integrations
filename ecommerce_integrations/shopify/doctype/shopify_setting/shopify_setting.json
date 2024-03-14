@@ -21,6 +21,8 @@
   "company_dependent_settings_section",
   "company",
   "cash_bank_account",
+  "network_solution_card_account",
+  "stripe_account",
   "column_break_19",
   "cost_center",
   "section_break_25",
@@ -387,12 +389,24 @@
    "fieldtype": "Link",
    "label": "Default Shipping Charges Account",
    "options": "Account"
+  },
+  {
+   "fieldname": "network_solution_card_account",
+   "fieldtype": "Link",
+   "label": "Network Solution Card Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "stripe_account",
+   "fieldtype": "Link",
+   "label": "Stripe Account",
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-10-24 10:38:49.247431",
+ "modified": "2024-03-14 13:34:04.605002",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
