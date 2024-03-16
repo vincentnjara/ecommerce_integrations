@@ -73,7 +73,7 @@ def make_payament_entry_against_sales_invoice(doc, shopify_order, setting, posti
 			if p.payment_method in shopify_order.get('payment_gateway_names'):
 				bank_account=p.account or setting.cash_bank_account
 
-	payment_entry = get_payment_entry(doc.doctype, doc.name, bank_account=setting.cash_bank_account)
+	payment_entry = get_payment_entry(doc.doctype, doc.name, bank_account)
 	payment_entry.flags.ignore_mandatory = True
 	payment_entry.reference_no = doc.name
 	payment_entry.posting_date = posting_date or nowdate()
