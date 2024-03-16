@@ -21,10 +21,10 @@
   "company_dependent_settings_section",
   "company",
   "cash_bank_account",
-  "network_solution_card_account",
-  "stripe_account",
   "column_break_19",
   "cost_center",
+  "payment_method_and_accounts_section",
+  "table_cecj",
   "section_break_25",
   "sales_order_series",
   "delivery_note_series",
@@ -391,22 +391,20 @@
    "options": "Account"
   },
   {
-   "fieldname": "network_solution_card_account",
-   "fieldtype": "Link",
-   "label": "Network Solution Card Account",
-   "options": "Account"
+   "fieldname": "payment_method_and_accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Method and Accounts"
   },
   {
-   "fieldname": "stripe_account",
-   "fieldtype": "Link",
-   "label": "Stripe Account",
-   "options": "Account"
+   "fieldname": "table_cecj",
+   "fieldtype": "Table",
+   "options": "Payment Method Accounts"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-03-14 13:34:04.605002",
+ "modified": "2024-03-16 20:55:34.000397",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
