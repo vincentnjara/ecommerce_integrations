@@ -42,6 +42,8 @@
   "default_sales_tax_account",
   "column_break_qibo",
   "default_shipping_charges_account",
+  "vendor_account_mapping_section",
+  "table_uuif",
   "erpnext_to_shopify_sync_section",
   "upload_erpnext_items",
   "update_shopify_item_on_update",
@@ -399,12 +401,22 @@
    "fieldname": "table_cecj",
    "fieldtype": "Table",
    "options": "Payment Method Accounts"
+  },
+  {
+   "fieldname": "vendor_account_mapping_section",
+   "fieldtype": "Section Break",
+   "label": "Vendor Account Mapping"
+  },
+  {
+   "fieldname": "table_uuif",
+   "fieldtype": "Table",
+   "options": "Vendor Account Mapping"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-03-16 20:55:34.000397",
+ "modified": "2024-03-19 09:15:18.183088",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
