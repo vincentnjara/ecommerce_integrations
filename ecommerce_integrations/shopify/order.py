@@ -215,7 +215,7 @@ def get_order_taxes(shopify_order, setting, items):
 					),
 					"tax_amount": tax.get("price"),
 					"included_in_print_rate": 0,
-					"cost_center": setting.cost_center,
+					"cost_center": vcenter or setting.cost_center,
 					"item_wise_tax_detail": {item_code: [flt(tax.get("rate")) * 100, flt(tax.get("price"))]},
 					"dont_recompute_tax": 1,
 				}
@@ -324,7 +324,7 @@ def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, vsac
 						"account_head": get_tax_account_head(shipping_charge, charge_type="shipping"),
 						"description": get_tax_account_description(shipping_charge) or shipping_charge["title"],
 						"tax_amount": shipping_charge_amount,
-						"cost_center": setting.cost_center,
+						"cost_center": vcenter or setting.cost_center,
 					}
 				)
 
