@@ -39,12 +39,11 @@ def create_sales_invoice(shopify_order, setting, so):
 	):
 
 		line_items = shopify_order.get("line_items")
-		vaccount=''
+		
 		vcenter=''
 		for line_item in line_items:
-			vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['sales_revenue_account','shipping_revenue_account','vendor_cost_center'], as_dict=1)
+			vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
 		if vsett:
-			vaccount=vsett.sales_revenue_account
 			vcenter=vsett.vendor_cost_center
 		cost_center=vcenter or setting.cost_center
 
@@ -58,7 +57,7 @@ def create_sales_invoice(shopify_order, setting, so):
 		sales_invoice.due_date = posting_date
 		sales_invoice.naming_series = setting.sales_invoice_series or "SI-Shopify-"
 		sales_invoice.flags.ignore_mandatory = True
-		set_cost_center(sales_invoice.items, cost_center, vaccount)
+		set_cost_center(sales_invoice.items, cost_center)
 		sales_invoice.insert(ignore_mandatory=True)
 		sales_invoice.submit()
 		if sales_invoice.grand_total > 0:
@@ -68,11 +67,10 @@ def create_sales_invoice(shopify_order, setting, so):
 			sales_invoice.add_comment(text=f"Order Note: {shopify_order.get('note')}")
 
 
-def set_cost_center(items, cost_center, vaccount):
+def set_cost_center(items, cost_center):
 	for item in items:
 		item.cost_center = cost_center
-		if vaccount:
-			item.income_account=vaccount
+		
 
 
 def make_payament_entry_against_sales_invoice(doc, shopify_order, setting, posting_date=None):

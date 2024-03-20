@@ -201,7 +201,7 @@ def get_order_taxes(shopify_order, setting, items):
 	vcenter=''
 	for line_item in line_items:
 		item_code = get_item_code(line_item)
-		vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['sales_revenue_account','shipping_revenue_account','vendor_cost_center'], as_dict=1)
+		vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
 		if vsett:
 			vsaccount=vsett.shipping_revenue_account
 			vcenter=vsett.vendor_cost_center
