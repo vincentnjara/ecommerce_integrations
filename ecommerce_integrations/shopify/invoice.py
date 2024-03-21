@@ -43,6 +43,9 @@ def create_sales_invoice(shopify_order, setting, so):
 		vcenter=''
 		for line_item in line_items:
 			vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
+			if not vsett:
+				vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':['is', 'null']}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
+		
 		if vsett:
 			vcenter=vsett.vendor_cost_center
 		cost_center=vcenter or setting.cost_center
