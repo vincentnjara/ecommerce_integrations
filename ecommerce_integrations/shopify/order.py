@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, flt, get_datetime, getdate, nowdate
 from shopify.collection import PaginatedIterator
-from shopify.resources import Order
+from shopify.resources import Order 
 
 from ecommerce_integrations.shopify.connection import temp_shopify_session
 from ecommerce_integrations.shopify.constants import (
@@ -435,3 +435,13 @@ def _fetch_old_orders(from_time, to_time):
 			# Using generator instead of fetching all at once is better for
 			# avoiding rate limits and reducing resource usage.
 			yield order.to_dict()
+
+
+@temp_shopify_session
+def getall_order_count():
+	shopify_setting = frappe.get_cached_doc(SETTING_DOCTYPE)
+	if not cint(shopify_setting.sync_old_orders):
+		return
+	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
+	order_count=len(orders)
+	create_shopify_log(method="ecommerce_integrations.shopify.order.getall_order_count", request_data=order_count, make_new=True)
