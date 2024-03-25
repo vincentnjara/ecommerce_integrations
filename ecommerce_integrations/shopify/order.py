@@ -441,8 +441,7 @@ def _fetch_old_orders(from_time, to_time):
 @temp_shopify_session
 def getall_order_count():
 	shopify_setting = frappe.get_cached_doc(SETTING_DOCTYPE)
-	if not cint(shopify_setting.sync_old_orders):
-		return
+	
 	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
 	odd='order ids: '
 	for order in orders:
