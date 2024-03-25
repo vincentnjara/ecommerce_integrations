@@ -477,12 +477,12 @@ def getall_order_custom():
         
 		if 'orders' in data:
 			orders.extend(data['orders'])
-			
+		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))
 		if 'next_page' in data['orders']:
 			params['page_info'] = data['orders']['next_page']
 		else:
 			break
 	
-	create_shopify_log(method="getall_order_custom", status='Success', message=str(orders))
+		
 
 	
