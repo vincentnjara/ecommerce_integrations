@@ -445,7 +445,7 @@ def getall_order_count():
 	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
 	odd='order ids: '
 	for order in orders:
-		odd=odd+str(order.get('order_id'))
+		odd=odd+str(cstr(order["id"]))
 	#order_count=len(orders)
 	create_shopify_log(method="getall_order_count", status='Success', message=str(odd))
 
