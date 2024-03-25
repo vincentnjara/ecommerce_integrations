@@ -452,7 +452,7 @@ def getall_order_count():
 
 @temp_shopify_session
 def getall_order_custom():
-	shopify_setting = frappe.get_cached_doc(SETTING_DOCTYPE)
+	shopify_setting = frappe.get_doc('Shopify Setting')
 	shopify_api_key = shopify_setting.shared_secret
 	shopify_api_password = shopify_setting.get_password('password')
 	shopify_store_url = shopify_setting.shopify_url
@@ -460,7 +460,7 @@ def getall_order_custom():
 	from_time = get_datetime(shopify_setting.old_orders_from).astimezone().isoformat()
 	to_time = get_datetime(shopify_setting.old_orders_to).astimezone().isoformat()
 	
-	api_endpoint = f"https://{shopify_store_url}/admin/api/2023-04/orders.json"
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/orders.json"
 	headers = {
         'Content-Type': 'application/json',
     }
@@ -474,14 +474,8 @@ def getall_order_custom():
 	while True:
 		response = requests.get(api_endpoint, auth=(shopify_api_key, shopify_api_password), headers=headers, params=params)
 		data = response.json()
-        
-		if 'orders' in data:
-			orders.extend(data['orders'])
-		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))
-		if 'next_page' in data['orders']:
-			params['page_info'] = data['orders']['next_page']
-		else:
-			break
+		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))        
+		break
 	
 		
 
