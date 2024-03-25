@@ -468,6 +468,7 @@ def getall_order_custom():
 	params = {
 		'created_at_min':from_time,
 		'created_at_max':to_time,
+		'financial_status':'paid',
         'limit': 250,  # Maximum number of orders per page
     }
 
