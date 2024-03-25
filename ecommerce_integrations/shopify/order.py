@@ -463,6 +463,7 @@ def getall_order_custom():
 	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/orders.json"
 	headers = {
         'Content-Type': 'application/json',
+		"X-Shopify-Access-Token": shopify_api_password
     }
 	params = {
 		'created_at_min':from_time,
