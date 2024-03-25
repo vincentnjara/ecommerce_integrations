@@ -473,7 +473,7 @@ def getall_order_custom():
 
 	orders = []
 	while True:
-		response = requests.get(api_endpoint, auth=(shopify_api_key, shopify_api_password), headers=headers, params=params)
+		response = requests.get(api_endpoint, auth=("014c5db001b2b51432e9e8dd4884ed7c", shopify_api_password), headers=headers, params=params)
 		data = response.json()
 		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))        
 		break
