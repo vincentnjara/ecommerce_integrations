@@ -444,4 +444,4 @@ def getall_order_count():
 		return
 	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
 	#order_count=len(orders)
-	create_shopify_log(method="ecommerce_integrations.shopify.order.getall_order_count", request_data=orders, make_new=True)
+	create_shopify_log(method="getall_order_count", status='Success', message=str(orders))
