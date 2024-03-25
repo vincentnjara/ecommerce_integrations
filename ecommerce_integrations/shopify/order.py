@@ -6,6 +6,7 @@ from frappe import _
 from frappe.utils import cint, cstr, flt, get_datetime, getdate, nowdate
 from shopify.collection import PaginatedIterator
 from shopify.resources import Order 
+import requests
 
 from ecommerce_integrations.shopify.connection import temp_shopify_session
 from ecommerce_integrations.shopify.constants import (
@@ -448,3 +449,40 @@ def getall_order_count():
 		odd=odd+str(order.get('order_id'))
 	#order_count=len(orders)
 	create_shopify_log(method="getall_order_count", status='Success', message=str(odd))
+
+@temp_shopify_session
+def getall_order_custom():
+	shopify_setting = frappe.get_cached_doc(SETTING_DOCTYPE)
+	shopify_api_key = shopify_setting.shared_secret
+	shopify_api_password = shopify_setting.get_password('password')
+	shopify_store_url = shopify_setting.shopify_url
+
+	from_time = get_datetime(shopify_setting.old_orders_from).astimezone().isoformat()
+	to_time = get_datetime(shopify_setting.old_orders_to).astimezone().isoformat()
+	
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2023-04/orders.json"
+	headers = {
+        'Content-Type': 'application/json',
+    }
+	params = {
+		'created_at_min':from_time,
+		'created_at_max':to_time,
+        'limit': 250,  # Maximum number of orders per page
+    }
+
+	orders = []
+	while True:
+		response = requests.get(api_endpoint, auth=(shopify_api_key, shopify_api_password), headers=headers, params=params)
+		data = response.json()
+        
+		if 'orders' in data:
+			orders.extend(data['orders'])
+			
+		if 'next_page' in data['orders']:
+			params['page_info'] = data['orders']['next_page']
+		else:
+			break
+	
+	create_shopify_log(method="getall_order_custom", status='Success', message=str(orders))
+
+	
