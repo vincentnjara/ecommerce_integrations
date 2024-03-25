@@ -443,5 +443,5 @@ def getall_order_count():
 	if not cint(shopify_setting.sync_old_orders):
 		return
 	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
-	order_count=len(orders)
-	create_shopify_log(method="ecommerce_integrations.shopify.order.getall_order_count", request_data=order_count, make_new=True)
+	#order_count=len(orders)
+	create_shopify_log(method="ecommerce_integrations.shopify.order.getall_order_count", request_data=orders, make_new=True)
