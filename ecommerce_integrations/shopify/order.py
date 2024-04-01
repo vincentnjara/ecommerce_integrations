@@ -107,6 +107,7 @@ def create_sales_order(shopify_order, setting, company=None):
 			{
 				"doctype": "Sales Order",
 				"naming_series": setting.sales_order_series or "SO-Shopify-",
+				"name":str(shopify_order.get("name")),
 				ORDER_ID_FIELD: str(shopify_order.get("id")),
 				ORDER_NUMBER_FIELD: shopify_order.get("name"),
 				"customer": customer,
@@ -477,7 +478,22 @@ def getall_order_custom():
 		data = response.json()
 		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))        
 		break
-	
-		
 
+@temp_shopify_session
+def getall_webhook():
+	shopify_setting = frappe.get_doc('Shopify Setting')
+	shopify_api_key = shopify_setting.shared_secret
+	shopify_api_password = shopify_setting.get_password('password')
+	shopify_store_url = shopify_setting.shopify_url
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/webhooks.json"
+	headers = {
+        'Content-Type': 'application/json',
+		"X-Shopify-Access-Token": shopify_api_password
+    }
+	params = {
+		
+    }	
+		
+	response = requests.get(api_endpoint, auth=("014c5db001b2b51432e9e8dd4884ed7c", shopify_api_password), headers=headers, params=params)
 	
+	print(str(response))
