@@ -442,6 +442,16 @@ def refund(payload, request_id=None):
 	refunds = payload
 	frappe.set_user("Administrator")
 	frappe.flags.request_id = request_id
+	if not frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])}):
+		create_shopify_log(status="Invalid", message="Sales order already exists, not synced")
+		return
+	try:
+		order=frappe.get_doc("Sales Order",refunds["order_id"])
+		create_shopify_log(status="Error", exception='refund code issue', rollback=True)
+	except Exception as e:
+		create_shopify_log(status="Error", exception=e, rollback=True)
+	else:
+		create_shopify_log(status="Success")
 
 
 @temp_shopify_session
