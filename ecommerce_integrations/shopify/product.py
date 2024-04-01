@@ -120,7 +120,7 @@ class ShopifyProduct:
 		item_dict = {
 			"variant_of": variant_of,
 			"is_stock_item": 1,
-			"item_code": cstr(product_dict.get("item_code")) or cstr(product_dict.get("id")),
+			"item_code": cstr(product_dict.get("sku")) or cstr(product_dict.get("item_code")) or cstr(product_dict.get("id")),
 			"item_name": product_dict.get("title", "").strip(),
 			"description": product_dict.get("body_html") or product_dict.get("title"),
 			"item_group": self._get_item_group(product_dict.get("product_type")),
@@ -161,8 +161,8 @@ class ShopifyProduct:
 			for variant in product_dict.get("variants"):
 				shopify_item_variant = {
 					"id": product_dict.get("id"),
-					"variant_id": variant.get("id"),
-					"item_code": variant.get("id"),
+					"variant_id": variant.get("sku") or variant.get("id"),
+					"item_code": variant.get("sku") or variant.get("id"),
 					"title": product_dict.get("title", "").strip() + "-" + variant.get("title"),
 					"product_type": product_dict.get("product_type"),
 					"sku": variant.get("sku"),
