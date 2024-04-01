@@ -438,6 +438,11 @@ def _fetch_old_orders(from_time, to_time):
 			# avoiding rate limits and reducing resource usage.
 			yield order.to_dict()
 
+def refund(payload, request_id=None):
+	refunds = payload
+	frappe.set_user("Administrator")
+	frappe.flags.request_id = request_id
+
 
 @temp_shopify_session
 def getall_order_count():
