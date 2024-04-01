@@ -107,7 +107,6 @@ def create_sales_order(shopify_order, setting, company=None):
 			{
 				"doctype": "Sales Order",
 				"naming_series": setting.sales_order_series or "SO-Shopify-",
-				"name":str(shopify_order.get("name")),
 				ORDER_ID_FIELD: str(shopify_order.get("id")),
 				ORDER_NUMBER_FIELD: shopify_order.get("name"),
 				"customer": customer,
@@ -442,11 +441,13 @@ def refund(payload, request_id=None):
 	refunds = payload
 	frappe.set_user("Administrator")
 	frappe.flags.request_id = request_id
-	if not frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])}):
-		create_shopify_log(status="Invalid", message="Sales order already exists, not synced")
+	order_id=frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])})
+	if not order_id:
+		#create_shopify_log(status="Invalid", message="Sales order Not exists, not synced")
+		create_shopify_log(status="Error", exception="Sales order Not exists, not synced")
 		return
 	try:
-		order=frappe.get_doc("Sales Order",refunds["order_id"])
+		order=frappe.get_doc("Sales Order",order_id)
 		create_shopify_log(status="Error", exception='refund code issue', rollback=True)
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e, rollback=True)
