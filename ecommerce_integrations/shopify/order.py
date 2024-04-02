@@ -453,7 +453,7 @@ def refund(payload, request_id=None):
 			order=frappe.get_doc("Sales Order",order_id)
 			item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'variant_id':rline.get('variant_id')},'erpnext_item_code')
 		
-		
+		id=frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["id"])})
 		create_shopify_log(status="Error", exception='refund code issue', rollback=True)
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e, rollback=True)
