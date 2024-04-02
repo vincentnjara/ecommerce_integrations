@@ -442,15 +442,18 @@ def refund(payload, request_id=None):
 	frappe.set_user("Administrator")
 	frappe.flags.request_id = request_id
 	order_id=frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])})
-	rline_items=refunds.get("refund_line_items")
-	for rline in rline_items:
-		rline.get('line_item')
 	if not order_id:
 		#create_shopify_log(status="Invalid", message="Sales order Not exists, not synced")
 		create_shopify_log(status="Error", exception="Sales order Not exists, not synced")
 		return
 	try:
-		order=frappe.get_doc("Sales Order",order_id)
+		rline_items=refunds.get("refund_line_items")
+		for rline in rline_items:
+			rline.get('line_item')
+			order=frappe.get_doc("Sales Order",order_id)
+			item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'variant_id':rline.get('variant_id')},'erpnext_item_code')
+		
+		
 		create_shopify_log(status="Error", exception='refund code issue', rollback=True)
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e, rollback=True)
