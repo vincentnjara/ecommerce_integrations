@@ -29,6 +29,8 @@
   "sales_order_series",
   "delivery_note_series",
   "sales_invoice_series",
+  "delivery_note_return_series",
+  "credit_note_series",
   "shipping_item",
   "column_break_27",
   "sync_delivery_note",
@@ -411,12 +413,22 @@
    "fieldname": "table_uuif",
    "fieldtype": "Table",
    "options": "Vendor Account Mapping"
+  },
+  {
+   "fieldname": "delivery_note_return_series",
+   "fieldtype": "Select",
+   "label": "Delivery Note Return Series"
+  },
+  {
+   "fieldname": "credit_note_series",
+   "fieldtype": "Select",
+   "label": "Credit Note Series"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-03-19 09:15:18.183088",
+ "modified": "2024-04-02 15:40:10.918670",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
