@@ -462,12 +462,13 @@ def refund(payload, request_id=None):
 		order=frappe.get_doc("Sales Order",order_id)
 		reitem=[]
 		refunditm=[]
-		for rline in rline_items:
-			tax=rline.get('total_tax') or 0
-			subtotal=rline.get('subtotal') or 0
+		for rlinei in rline_items:
+			rline=rlinei.get("line_item")
+			tax=rlinei.get('total_tax') or 0
+			subtotal=rlinei.get('subtotal') or 0
 			product_amt=subtotal-tax
 			qty=rline.get("quantity")
-			item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'variant_id':rline.get('variant_id')},'erpnext_item_code',debug=True)
+			item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'variant_id':rline.get('variant_id')},'erpnext_item_code')
 			reitem.append(item_code)
 			refunditm.append({"item_code":item_code,"amt":product_amt,"tax":tax,"qty":qty})
 		
