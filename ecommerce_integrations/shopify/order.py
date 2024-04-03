@@ -538,7 +538,7 @@ def refund(payload, request_id=None):
 			"items": items,
 			"taxes": taxes,
 		})
-		ermsg=str(delivary_note_doc)
+		ermsg=str(delivary_note_doc.as_dict())
 		dlv = frappe.get_doc(delivary_note_doc)
 		dlv.flags.ignore_mandatory = True
 		dlv.save(ignore_permissions=True)
