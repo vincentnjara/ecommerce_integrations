@@ -470,7 +470,8 @@ def refund(payload, request_id=None):
 			refunditm.append({"item_code":item_code,"amt":product_amt,"tax":tax,"qty":qty})
 		
 		delivary_note=frappe.db.get_value("Delivery Note",{"is_return":0,"shopify_order_id":order.shopify_order_id,"shopify_order_number":order.shopify_order_number},'name')
-		delivary_note_doc=frappe.get_doc("Delivery Note",delivary_note).copy()
+		delivarynote_doc=frappe.get_doc("Delivery Note",delivary_note)
+		delivary_note_doc=frappe.copy_doc(delivarynote_doc)
 		items=[]
 		taxes=[]
 		
