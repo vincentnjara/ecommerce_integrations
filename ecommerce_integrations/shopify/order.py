@@ -533,8 +533,8 @@ def refund(payload, request_id=None):
 		delivary_note_doc.update({
 			"name":'',
 			"naming_series": setting.delivery_note_return_series,
-			"posting_date": getdate(refunds.get("created_at")),
-			"posting_time": get_datetime(refunds.get("created_at").replace('T',' ')).strftime("%H:%M:%S"),
+			"posting_date": getdate(),
+			"posting_time": get_datetime().strftime("%H:%M:%S"),
 			"status":"Draft",
 			"is_return":1,
 			"return_against":delivary_note,
