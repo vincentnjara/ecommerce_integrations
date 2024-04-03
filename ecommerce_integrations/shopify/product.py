@@ -161,7 +161,7 @@ class ShopifyProduct:
 			for variant in product_dict.get("variants"):
 				shopify_item_variant = {
 					"id": product_dict.get("id"),
-					"variant_id": variant.get("sku") or variant.get("id"),
+					"variant_id": variant.get("id"),
 					"item_code": variant.get("sku") or variant.get("id"),
 					"title": product_dict.get("title", "").strip() + "-" + variant.get("title"),
 					"product_type": product_dict.get("product_type"),
