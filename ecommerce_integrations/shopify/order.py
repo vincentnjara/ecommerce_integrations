@@ -490,7 +490,9 @@ def refund(payload, request_id=None):
 					"net_amount":itm.net_amount *-1,
 					"tax_amount":itm.tax_amount *-1,
 					"total_amount":itm.total_amount *-1,
-					"qty":itm.qty *-1,})
+					"qty":itm.qty *-1,
+					"stock_qty":itm.stock_qty *-1,
+					})
 				items.append(itm)
 		
 		subtot=0
