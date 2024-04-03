@@ -532,7 +532,7 @@ def refund(payload, request_id=None):
 		
 		delivary_note_doc.update({
 			"name":'',
-			"naming_series": setting.delivery_note_return_series or "SO-Shopify-",
+			"naming_series": setting.delivery_note_return_series,
 			"posting_date": getdate(refunds.get("created_at")),
 			"posting_time": getdate(refunds.get("created_at")).strftime("%H:%M:%S"),
 			"status":"Draft",
@@ -553,7 +553,7 @@ def refund(payload, request_id=None):
 		return_invoice = make_sales_invoice(dlv.name)
 		return_invoice.shopify_order_id=order.shopify_order_id
 		return_invoice.shopify_order_number=order.shopify_order_number
-		return_invoice.naming_series=str(setting.credit_note_series) or "SO-Shopify-",
+		return_invoice.update({"naming_series":setting.credit_note_series}),
 		return_invoice.is_return = True
 		return_invoice.save()
 		return_invoice.submit()
