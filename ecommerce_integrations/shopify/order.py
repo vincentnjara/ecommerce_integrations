@@ -560,6 +560,8 @@ def refund(payload, request_id=None):
 
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 		pentry=get_payment_entry('Sales Invoice',return_invoice.name)
+		pentry.reference_no = str(order.shopify_order_number)+" Refund"
+		pentry.reference_date = getdate()
 		pentry.save().submit()
 
 	except Exception as e:
