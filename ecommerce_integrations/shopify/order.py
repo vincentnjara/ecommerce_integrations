@@ -528,8 +528,8 @@ def refund(payload, request_id=None):
 		delivary_note_doc.update({
 			"name":'',
 			"naming_series": setting.delivery_note_return_series or "SO-Shopify-",
-			"posting_date": getdate(shipd.get("created_at")),
-			"posting_time": getdate(shipd.get("created_at")).strftime("%H:%M:%S"),
+			"posting_date": getdate(refunds.get("created_at")),
+			"posting_time": getdate(refunds.get("created_at")).strftime("%H:%M:%S"),
 			"status":"Draft",
 			"is_return":1,
 			"return_against":delivary_note,
