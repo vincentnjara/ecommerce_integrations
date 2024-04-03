@@ -456,7 +456,7 @@ def refund(payload, request_id=None):
 		
 		for ship in shipd:
 			if ship.get("reason")=="Shipping refund":
-				shipamt+=float(ship.get("amount")) or 0 +float(ship.get("tax_amount")) or 0
+				shipamt+=(float(ship.get("amount")) or 0) +(float(ship.get("tax_amount")) or 0)
 
 		rline_items=refunds.get("refund_line_items")
 		order=frappe.get_doc("Sales Order",order_id)
