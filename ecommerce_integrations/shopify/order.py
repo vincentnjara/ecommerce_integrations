@@ -496,8 +496,8 @@ def refund(payload, request_id=None):
 				#tax line
 				tax=0
 				for itm in refunditm:
-					tax+=itm.tax
-					subtot+=itm.amt+itm.tax
+					tax+=itm.get('tax')
+					subtot+=itm.get('amt')+itm.get('tax')
 
 				tx.update({
 					"name":'',
