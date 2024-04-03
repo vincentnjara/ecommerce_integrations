@@ -553,7 +553,7 @@ def refund(payload, request_id=None):
 		return_invoice = make_sales_invoice(dlv.name)
 		return_invoice.shopify_order_id=order.shopify_order_id
 		return_invoice.shopify_order_number=order.shopify_order_number
-		return_invoice.naming_series=setting.credit_note_series or "SO-Shopify-",
+		return_invoice.naming_series=str(setting.credit_note_series) or "SO-Shopify-",
 		return_invoice.is_return = True
 		return_invoice.save()
 		return_invoice.submit()
