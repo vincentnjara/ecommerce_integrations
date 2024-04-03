@@ -558,6 +558,10 @@ def refund(payload, request_id=None):
 		return_invoice.save()
 		return_invoice.submit()
 
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+		pentry=get_payment_entry('Sales Invoice',return_invoice.name)
+		pentry.save().submit()
+		
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
 	else:
