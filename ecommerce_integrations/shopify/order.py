@@ -443,11 +443,13 @@ def refund(payload, request_id=None):
 	frappe.flags.request_id = request_id
 	order_id=frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])})
 	setting = frappe.get_doc(SETTING_DOCTYPE)
+	ermsg=''
 	if not order_id:
 		create_shopify_log(status="Invalid", message="Sales order Not exists, not synced")
 		return
 	try:
-
+		
+		
 		shipd=refunds.get("order_adjustments")
 		shipamt=0
 		#gateway=refunds.get("transactions")[0].gateway
@@ -536,6 +538,7 @@ def refund(payload, request_id=None):
 			"items": items,
 			"taxes": taxes,
 		})
+		ermsg=str(delivary_note_doc)
 		dlv = frappe.get_doc(delivary_note_doc)
 		dlv.flags.ignore_mandatory = True
 		dlv.save(ignore_permissions=True)
@@ -551,7 +554,7 @@ def refund(payload, request_id=None):
 		return_invoice.submit()
 
 	except Exception as e:
-		create_shopify_log(status="Error", exception=e, rollback=True)
+		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
 	else:
 		create_shopify_log(status="Success")
 
