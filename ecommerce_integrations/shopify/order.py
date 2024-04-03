@@ -491,9 +491,7 @@ def refund(payload, request_id=None):
 				items.append(itm)
 
 		subtot=0
-		for tx in delivary_note_doc.taxes:
-			del tx['name']
-			del tx['parent']
+		for tx in delivary_note_doc.taxes:			
 			if setting.default_sales_tax_account==tx.account_head:
 				#tax line
 				tax=0
@@ -502,6 +500,8 @@ def refund(payload, request_id=None):
 					subtot+=itm.amt+itm.tax
 
 				tx.update({
+					"name":'',
+					"parent":'',
 					"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
 					"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
 					"base_total": subtot*-1*delivary_note_doc.conversion_rate,
