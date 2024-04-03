@@ -534,7 +534,7 @@ def refund(payload, request_id=None):
 			"name":'',
 			"naming_series": setting.delivery_note_return_series,
 			"posting_date": getdate(refunds.get("created_at")),
-			"posting_time": getdate(refunds.get("created_at")).strftime("%H:%M:%S"),
+			"posting_time": get_datetime(refunds.get("created_at")).strftime("%H:%M:%S"),
 			"status":"Draft",
 			"is_return":1,
 			"return_against":delivary_note,
@@ -561,7 +561,7 @@ def refund(payload, request_id=None):
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 		pentry=get_payment_entry('Sales Invoice',return_invoice.name)
 		pentry.save().submit()
-		
+
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
 	else:
