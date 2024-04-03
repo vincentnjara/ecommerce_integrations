@@ -543,7 +543,7 @@ def refund(payload, request_id=None):
 		})
 		
 		
-		ermsg=str(delivary_note_doc.as_dict())
+		#ermsg=str(delivary_note_doc.as_dict())
 		dlv = frappe.get_doc(delivary_note_doc)
 		dlv.flags.ignore_mandatory = True
 		dlv.save(ignore_permissions=True)
@@ -555,6 +555,7 @@ def refund(payload, request_id=None):
 		return_invoice.shopify_order_number=order.shopify_order_number
 		return_invoice.update({"naming_series":setting.credit_note_series}),
 		return_invoice.is_return = True
+		#ermsg=str(return_invoice.as_dict())
 		return_invoice.save()
 		return_invoice.submit()
 
@@ -562,7 +563,9 @@ def refund(payload, request_id=None):
 		pentry=get_payment_entry('Sales Invoice',return_invoice.name)
 		pentry.reference_no = str(order.shopify_order_number)+" Refund"
 		pentry.reference_date = getdate()
-		pentry.save().submit()
+		ermsg=str(pentry.as_dict())
+		pentry.save()
+		pentry.submit()
 
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
