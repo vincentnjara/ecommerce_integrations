@@ -480,10 +480,11 @@ def refund(payload, request_id=None):
 		
 		for itm in delivary_note_doc.items:
 			if itm.item_code in reitem:
-				del itm['name']
-				del itm['parent']
 				#item line
-				itm.update({"amount":itm.amount *-1,
+				itm.update({
+					"name":'',
+					"parent":'',
+					"amount":itm.amount *-1,
 					"base_amount":itm.base_amount *-1,
 					"base_net_amount":itm.base_net_amount *-1,
 					"net_amount":itm.net_amount *-1,
@@ -491,7 +492,7 @@ def refund(payload, request_id=None):
 					"total_amount":itm.total_amount *-1,
 					"qty":itm.qty *-1,})
 				items.append(itm)
-		ermsg=str(reitem)
+		
 		subtot=0
 		for tx in delivary_note_doc.taxes:			
 			if setting.default_sales_tax_account==tx.account_head:
@@ -540,7 +541,7 @@ def refund(payload, request_id=None):
 		})
 		
 		
-		#ermsg=str(delivary_note_doc.as_dict())
+		ermsg=str(delivary_note_doc.as_dict())
 		dlv = frappe.get_doc(delivary_note_doc)
 		dlv.flags.ignore_mandatory = True
 		dlv.save(ignore_permissions=True)
