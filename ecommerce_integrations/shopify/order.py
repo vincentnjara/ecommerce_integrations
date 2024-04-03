@@ -524,8 +524,9 @@ def refund(payload, request_id=None):
 				taxes.append(tx)
 
 	
-		del delivary_note_doc['name']
+		
 		delivary_note_doc.update({
+			"name":'',
 			"naming_series": setting.delivery_note_return_series or "SO-Shopify-",
 			"posting_date": getdate(shipd.get("created_at")),
 			"posting_time": getdate(shipd.get("created_at")).strftime("%H:%M:%S"),
