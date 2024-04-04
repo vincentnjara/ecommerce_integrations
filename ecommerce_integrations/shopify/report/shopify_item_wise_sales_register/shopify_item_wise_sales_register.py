@@ -96,6 +96,10 @@ def _execute(filters=None, additional_table_columns=None, additional_conditions=
 		else:
 			row.update({"rate": d.base_net_rate, "amount": d.base_net_amount})
 
+		if d.get('so_detail'):
+			item_discount=frappe.db.get_value("Sales Order Item",d.get('so_detail'),'shopify_item_discount') or 0
+			row.update({"item_discount": item_discount})
+
 		total_tax = 0
 		total_other_charges = 0
 		for tax in tax_columns:
@@ -312,6 +316,13 @@ def get_columns(additional_table_columns, filters):
 			"width": 100,
 		},
 		{
+			"label": _("Discount"),
+			"fieldname": "item_discount",
+			"fieldtype": "Float",
+			"options": "currency",
+			"width": 100,
+		},
+		{
 			"label": _("Amount"),
 			"fieldname": "amount",
 			"fieldtype": "Currency",
@@ -392,7 +403,7 @@ def get_items(filters, additional_query_columns, additional_conditions=None):
 			`tabSales Invoice`.is_internal_customer,
 			`tabSales Invoice`.customer, `tabSales Invoice`.remarks,
 			`tabSales Invoice`.territory, `tabSales Invoice`.company, `tabSales Invoice`.base_net_total,
-			`tabSales Invoice Item`.project,
+			`tabSales Invoice Item`.project,`tabSales Invoice Item`.so_detail,
 			`tabSales Invoice Item`.item_code, `tabSales Invoice Item`.description,
 			`tabSales Invoice Item`.`item_name`, `tabSales Invoice Item`.`item_group`,
 			`tabSales Invoice Item`.`item_name` as si_item_name, `tabSales Invoice Item`.`item_group` as si_item_group,
