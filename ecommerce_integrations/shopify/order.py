@@ -551,10 +551,12 @@ def refund(payload, request_id=None):
 		dlv.save(ignore_permissions=True)
 		dlv.submit()
 		
+		delivarynote_doc.status='Return Issued'
+		delivarynote_doc.save(ignore_permissions=True)
 		#credit note 
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice,update_delivery_note_status
 
-		update_delivery_note_status(delivary_note,'Return Issued')
+		#update_delivery_note_status(delivary_note,'Return Issued')
 
 		return_invoice = make_sales_invoice(dlv.name)
 		return_invoice.shopify_order_id=order.shopify_order_id
