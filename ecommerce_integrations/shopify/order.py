@@ -551,8 +551,9 @@ def refund(payload, request_id=None):
 		dlv.save(ignore_permissions=True)
 		dlv.submit()
 		
-		delivarynote_doc.status='Return Issued'
-		delivarynote_doc.save(ignore_permissions=True)
+		#delivarynote_doc.status='Return Issued'
+		#delivarynote_doc.save(ignore_permissions=True)
+		frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
 		#credit note 
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice,update_delivery_note_status
 
