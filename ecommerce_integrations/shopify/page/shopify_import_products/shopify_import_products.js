@@ -65,12 +65,12 @@ shopify.ProductImporter = class {
                     <div class="w-100">
                         <div class="card border-0 shadow-sm p-3 mb-3 rounded-sm" style="background-color: var(--card-bg)">
 							<h5 class="border-bottom pb-2">Re-sync Product</h5>
-							<div style="width:100%;">
+							<div style="width:100%;padding-bottom: 30px;display: block;">
 								<div style="width:70%;float:left;">
-									<input type="text" autocomplete="off" class="input-with-feedback form-control" maxlength="100" data-fieldtype="Data" data-fieldname="product" placeholder="" >
+									<input type="text" autocomplete="off" id="re-sync-data" class="input-with-feedback form-control" maxlength="100" data-fieldtype="Data" data-fieldname="product" placeholder="Shopify Id" >
 								</div>
-								<div style="width:30%;float:right;">
-									<button type="button" class="btn btn-default btn-xs" > Re-sync </button>
+								<div style="width:30%;float:right;text-align: right;">
+									<button type="button" class="btn btn-default btn-xs" id="btn-re-sync" > Re-sync </button>
 								</div>
 							</div>
 							
@@ -265,6 +265,27 @@ shopify.ProductImporter = class {
 
 		// sync all products
 		this.wrapper.on('click', '#btn-sync-all', e => this.syncAll(e));
+
+		this.wrapper.on('click', '#btn-re-sync', e => {
+            
+			const _this = $(e.currentTarget);
+            _this.prop('disabled', true).text('Syncing...');
+
+            const product = this.wrapper.$('#re-sync-data').val();
+            this.resyncProduct(product)
+                .then(status => {
+
+                    if (!status) {
+                        frappe.throw(__('Error syncing product'));
+                        return;
+                    }
+					_this.prop('disabled', false).text('Re-sync');
+                })
+                .catch(ex => {
+                    _this.prop('disabled', false).text('Re-sync');
+                    frappe.throw(__('Error syncing Product'));
+                });
+        });
 
 	}
 
