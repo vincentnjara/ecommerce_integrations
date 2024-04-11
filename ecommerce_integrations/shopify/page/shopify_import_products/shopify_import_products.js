@@ -272,6 +272,11 @@ shopify.ProductImporter = class {
             _this.prop('disabled', true).text('Syncing...');
 
             const product = this.wrapper.find('#re-sync-data').val();
+			
+			if(product==''){
+				frappe.throw(__('Please Enter Shopify product Id'));
+			}
+			
             this.resyncProduct(product)
                 .then(status => {
 
