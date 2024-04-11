@@ -271,7 +271,7 @@ shopify.ProductImporter = class {
 			const _this = $(e.currentTarget);
             _this.prop('disabled', true).text('Syncing...');
 
-            const product = this.wrapper.$('#re-sync-data').val();
+            const product = this.wrapper.find('#re-sync-data').val();
             this.resyncProduct(product)
                 .then(status => {
 
