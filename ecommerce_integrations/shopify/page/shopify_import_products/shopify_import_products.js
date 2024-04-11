@@ -64,6 +64,12 @@ shopify.ProductImporter = class {
                 <div class="col-lg-4 d-flex align-items-stretch">
                     <div class="w-100">
                         <div class="card border-0 shadow-sm p-3 mb-3 rounded-sm" style="background-color: var(--card-bg)">
+							<h5 class="border-bottom pb-2">Re-sync Product</h5>
+							<div>
+							<input type="text" autocomplete="off" class="input-with-feedback form-control" maxlength="100" data-fieldtype="Data" data-fieldname="product" placeholder="" >
+							<button type="button" class="btn btn-default btn-xs" > Re-sync </button>
+							</div>
+							
                             <h5 class="border-bottom pb-2">Synchronization Details</h5>
                             <div id="shopify-sync-info">
                                 <div class="py-3 border-bottom">
