@@ -560,6 +560,5 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 @temp_shopify_session
 def get_product():
 	product_id='8011296800939'
-	item={'name':product_id}
 	shopify_product = Product.find(product_id)
-	write_upload_log(status="sucess", product=shopify_product, item=item, action="product")
+	create_shopify_log(status="Success", request_data=shopify_product, message="product details", method="get_product")
