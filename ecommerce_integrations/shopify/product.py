@@ -556,3 +556,9 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 			message=f"{action} Item: {item.name}, shopify product: {product.id}",
 			method="upload_erpnext_item",
 		)
+
+@temp_shopify_session
+def get_product():
+	product_id=''
+	shopify_product = Product.find(product_id)
+	write_upload_log(status="sucess", product=shopify_product, item='', action="product")
