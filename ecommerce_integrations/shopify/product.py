@@ -561,4 +561,4 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 def get_product():
 	product_id='8011296800939'
 	shopify_product = Product.find(product_id)
-	create_shopify_log(status="Success", message=str(shopify_product), method="get_product")
+	create_shopify_log(status="Success", message=str(shopify_product.to_dict()), method="get_product")
