@@ -117,10 +117,16 @@ class ShopifyProduct:
 				item_attr.append("item_attribute_values", {"attribute_value": attr_value, "abbr": attr_value})
 
 	def _create_item(self, product_dict, warehouse, has_variant=0, attributes=None, variant_of=None):
+		
+		if not has_variant:
+			item_code=product_dict.get("sku") or _get_sku(product_dict) or cstr(product_dict.get("item_code")) or cstr(product_dict.get("id"))
+		else:
+			item_code=cstr(product_dict.get("sku")) or cstr(product_dict.get("item_code")) or cstr(product_dict.get("id"))
+
 		item_dict = {
 			"variant_of": variant_of,
 			"is_stock_item": 1,
-			"item_code": cstr(product_dict.get("sku")) or cstr(product_dict.get("item_code")) or cstr(product_dict.get("id")),
+			"item_code": item_code,
 			"item_name": product_dict.get("title", "").strip(),
 			"description": product_dict.get("body_html") or product_dict.get("title"),
 			"item_group": self._get_item_group(product_dict.get("product_type")),
