@@ -496,82 +496,90 @@ def refund(payload, request_id=None):
 					"stock_qty":itm.stock_qty *-1,
 					})
 				items.append(itm)
-		
-		subtot=0
-		for tx in delivary_note_doc.taxes:			
-			if setting.default_sales_tax_account==tx.account_head:
-				#tax line
-				tax=0
-				for itm in refunditm:
-					tax+=itm.get('tax')
-					subtot+=itm.get('amt')+itm.get('tax')
 
-				tx.update({
-					"name":'',
-					"parent":'',
-					"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
-					"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
-					"base_total": subtot*-1*delivary_note_doc.conversion_rate,
-					"tax_amount": tax*delivary_note_doc.conversion_rate*-1,
-					"tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
-					"total": subtot*-1,	
-					})
-				taxes.append(tx)
-			else:
-				#shipping line conversion_rate
-				
-				tx.update({
-					"base_tax_amount": shipamt*delivary_note_doc.conversion_rate,
-					"base_tax_amount_after_discount_amount": shipamt*delivary_note_doc.conversion_rate,
-					"base_total": ((subtot*-1)+shipamt)*delivary_note_doc.conversion_rate,
-					"tax_amount": shipamt,
-					"tax_amount_after_discount_amount": shipamt,
-					"total": (subtot*-1)+shipamt,	
-					})
-				taxes.append(tx)
+		if len(items):
+			subtot=0
+			for tx in delivary_note_doc.taxes:			
+				if setting.default_sales_tax_account==tx.account_head:
+					#tax line
+					tax=0
+					for itm in refunditm:
+						tax+=itm.get('tax')
+						subtot+=itm.get('amt')+itm.get('tax')
 
-	
-		
-		delivary_note_doc.update({
-			"name":'',
-			"naming_series": setting.delivery_note_return_series,
-			"posting_date": getdate(),
-			"posting_time": get_datetime().strftime("%H:%M:%S"),
-			"status":"Draft",
-			"is_return":1,
-			"return_against":delivary_note,
-			"items": items,
-			"taxes": taxes,
-		})
-		
-		
-		ermsg=str(delivary_note_doc.as_dict())
-		dlv = frappe.get_doc(delivary_note_doc)
-		dlv.flags.ignore_mandatory = True
-		dlv.save(ignore_permissions=True)
-		dlv.submit()
-		
-		frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
-		#credit note 
-		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+					tx.update({
+						"name":'',
+						"parent":'',
+						"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"base_total": subtot*-1*delivary_note_doc.conversion_rate,
+						"tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"total": subtot*-1,	
+						})
+					taxes.append(tx)
+				else:
+					#shipping line conversion_rate
+					
+					tx.update({
+						"base_tax_amount": shipamt*delivary_note_doc.conversion_rate,
+						"base_tax_amount_after_discount_amount": shipamt*delivary_note_doc.conversion_rate,
+						"base_total": ((subtot*-1)+shipamt)*delivary_note_doc.conversion_rate,
+						"tax_amount": shipamt,
+						"tax_amount_after_discount_amount": shipamt,
+						"total": (subtot*-1)+shipamt,	
+						})
+					taxes.append(tx)
 
-		return_invoice = make_sales_invoice(dlv.name)
-		return_invoice.shopify_order_id=order.shopify_order_id
-		return_invoice.shopify_order_number=order.shopify_order_number
-		return_invoice.update({"naming_series":setting.credit_note_series}),
-		return_invoice.is_return = True
-		ermsg=str(return_invoice.as_dict())
-		return_invoice.save()
-		return_invoice.submit()
+		
+			
+			delivary_note_doc.update({
+				"name":'',
+				"naming_series": setting.delivery_note_return_series,
+				"posting_date": getdate(),
+				"posting_time": get_datetime().strftime("%H:%M:%S"),
+				"status":"Draft",
+				"is_return":1,
+				"return_against":delivary_note,
+				"items": items,
+				"taxes": taxes,
+			})
+			
+			
+			ermsg=str(delivary_note_doc.as_dict())
+			dlv = frappe.get_doc(delivary_note_doc)
+			dlv.flags.ignore_mandatory = True
+			dlv.save(ignore_permissions=True)
+			dlv.submit()
+			
+			frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
+			#credit note 
+			from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
-		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-		pentry=get_payment_entry('Sales Invoice',return_invoice.name)
-		pentry.reference_no = str(order.shopify_order_number)+" Refund"
-		pentry.update({'reference_date': nowdate()})
-		ermsg=str(pentry.as_dict())
-		pentry.save()
-		pentry.submit()
+			return_invoice = make_sales_invoice(dlv.name)
+			return_invoice.shopify_order_id=order.shopify_order_id
+			return_invoice.shopify_order_number=order.shopify_order_number
+			return_invoice.update({"naming_series":setting.credit_note_series}),
+			return_invoice.is_return = True
+			ermsg=str(return_invoice.as_dict())
+			return_invoice.save()
+			return_invoice.submit()
 
+			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
+			pentry.reference_no = str(order.shopify_order_number)+" Refund"
+			ordpay=frappe.db.sql(""" select paid_from,paid_to from `tabPayment Entry` where reference_no in (select s.name from `tabSales Invoice Item` i left join `tabSales Invoice` s on i.parent=s.name where s.status="Paid" and i.sales_order="{0}") """.format(order_id),as_dict=1)
+			if len(ordpay):
+				pentry.paid_from=ordpay[0].paid_to
+				pentry.paid_to=ordpay[0].paid_from
+			pentry.update({'reference_date': nowdate()})
+			ermsg=str(pentry.as_dict())
+			pentry.save()
+			pentry.submit()
+		else:
+			create_shopify_log(status="Invalid", message="Sales order item Not exists")
+			return
+			
 	except Exception as e:
 		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
 	else:
