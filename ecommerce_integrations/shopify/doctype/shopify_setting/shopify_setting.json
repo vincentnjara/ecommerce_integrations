@@ -23,8 +23,8 @@
   "cash_bank_account",
   "column_break_19",
   "cost_center",
-  "payment_method_and_accounts_section",
-  "table_cecj",
+  "section_break_mjmb",
+  "payment_method_and_accounts",
   "section_break_25",
   "sales_order_series",
   "delivery_note_series",
@@ -45,7 +45,7 @@
   "column_break_qibo",
   "default_shipping_charges_account",
   "vendor_account_mapping_section",
-  "table_uuif",
+  "vendor_account_mapping",
   "erpnext_to_shopify_sync_section",
   "upload_erpnext_items",
   "update_shopify_item_on_update",
@@ -395,24 +395,8 @@
    "options": "Account"
   },
   {
-   "fieldname": "payment_method_and_accounts_section",
-   "fieldtype": "Section Break",
-   "label": "Payment Method and Accounts"
-  },
-  {
-   "fieldname": "table_cecj",
-   "fieldtype": "Table",
-   "options": "Payment Method Accounts"
-  },
-  {
    "fieldname": "vendor_account_mapping_section",
-   "fieldtype": "Section Break",
-   "label": "Vendor Account Mapping"
-  },
-  {
-   "fieldname": "table_uuif",
-   "fieldtype": "Table",
-   "options": "Vendor Account Mapping"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "delivery_note_return_series",
@@ -423,12 +407,28 @@
    "fieldname": "credit_note_series",
    "fieldtype": "Select",
    "label": "Credit Note Series"
+  },
+  {
+   "fieldname": "section_break_mjmb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payment_method_and_accounts",
+   "fieldtype": "Table",
+   "label": "Payment Method and Accounts",
+   "options": "Payment Method Accounts"
+  },
+  {
+   "fieldname": "vendor_account_mapping",
+   "fieldtype": "Table",
+   "label": "Vendor Account Mapping",
+   "options": "Vendor Account Mapping"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-04-02 15:40:10.918670",
+ "modified": "2024-04-21 20:27:00.090577",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
