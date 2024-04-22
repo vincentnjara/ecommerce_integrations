@@ -23,7 +23,7 @@
   "cash_bank_account",
   "column_break_19",
   "cost_center",
-  "section_break_mjmb",
+  "payment_method_and_accounts_section",
   "payment_method_and_accounts",
   "section_break_25",
   "sales_order_series",
@@ -42,6 +42,7 @@
   "taxes",
   "section_break_zeoy",
   "default_sales_tax_account",
+  "vat_emirate",
   "column_break_qibo",
   "default_shipping_charges_account",
   "vendor_account_mapping_section",
@@ -409,10 +410,6 @@
    "label": "Credit Note Series"
   },
   {
-   "fieldname": "section_break_mjmb",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "payment_method_and_accounts",
    "fieldtype": "Table",
    "label": "Payment Method and Accounts",
@@ -423,12 +420,22 @@
    "fieldtype": "Table",
    "label": "Vendor Account Mapping",
    "options": "Vendor Account Mapping"
+  },
+  {
+   "fieldname": "payment_method_and_accounts_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "vat_emirate",
+   "fieldtype": "Select",
+   "label": "Vat Emirate",
+   "options": "\nAbu Dhabi\nAjman\nDubai\nFujairah\nRas Al Khaimah\nSharjah\nUmm Al Quwain"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-04-21 20:27:00.090577",
+ "modified": "2024-04-22 20:21:18.173562",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
