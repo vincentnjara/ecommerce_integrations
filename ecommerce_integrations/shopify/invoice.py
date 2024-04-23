@@ -86,8 +86,8 @@ def set_shipping_account(shopify_order,items,setting):
 			vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':['is', 'null']}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
 	
 	if vsett:
-			shipping_charges_account=vsett.shipping_revenue_account or shipping_charges_account
-			cost_center=vsett.vendor_cost_center or cost_center
+		shipping_charges_account=vsett.shipping_revenue_account or shipping_charges_account
+		cost_center=vsett.vendor_cost_center or cost_center
 
 	for item in items:
 		if setting.shipping_item==item.get('item_code'):
