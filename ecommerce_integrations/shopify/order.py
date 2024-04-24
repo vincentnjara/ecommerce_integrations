@@ -455,7 +455,6 @@ def refund(payload, request_id=None):
 		return
 	try:
 		
-		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 		shipd=refunds.get("order_adjustments")
 		shipamt=0
 		reitem=[]
@@ -493,6 +492,8 @@ def refund(payload, request_id=None):
 		taxes=[]
 
 		delivary_note=frappe.db.get_value("Delivery Note",{"is_return":0,"shopify_order_id":order.shopify_order_id,"shopify_order_number":order.shopify_order_number},'name')
+		#from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 		return_invoice = make_sales_invoice(order_id)
 		if delivary_note:
 			delivarynote_doc=frappe.get_doc("Delivery Note",delivary_note)
