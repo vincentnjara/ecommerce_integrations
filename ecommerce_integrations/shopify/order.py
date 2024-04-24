@@ -628,10 +628,10 @@ def refund(payload, request_id=None):
 			return_invoice.update({"naming_series":setting.credit_note_series})
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
-			return_invoice.update({
-					"items": items,
-					"taxes": taxes,
-				})
+			#return_invoice.update({
+			#		"items": items,
+			#		"taxes": taxes,
+			#	})
 			ermsg=str(return_invoice.as_dict())
 			return_invoice.save()
 			return_invoice.submit()
