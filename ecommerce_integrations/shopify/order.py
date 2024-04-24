@@ -625,7 +625,8 @@ def refund(payload, request_id=None):
 			
 			return_invoice.shopify_order_id=order.shopify_order_id
 			return_invoice.shopify_order_number=order.shopify_order_number
-			return_invoice.update({"naming_series":setting.credit_note_series}),
+			return_invoice.update({"naming_series":setting.credit_note_series})
+			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
 			return_invoice.update({
 					"items": items,
