@@ -5,7 +5,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, flt, get_datetime, getdate, nowdate
 from shopify.collection import PaginatedIterator
-from shopify.resources import Order
+from shopify.resources import Order 
+import requests
 
 from ecommerce_integrations.shopify.connection import temp_shopify_session
 from ecommerce_integrations.shopify.constants import (
@@ -123,11 +124,11 @@ def create_sales_order(shopify_order, setting, company=None):
 		if company:
 			so.update({"company": company, "status": "Draft"})
 
-											  
-							  
-															
-												   
-
+		line_items = shopify_order.get("line_items")
+		for line_item in line_items:
+			if line_item.get("tax_lines",'') and setting.vat_emirate:
+				so.update({"vat_emirate": setting.vat_emirate})
+				
 		so.flags.ignore_mandatory = True
 		so.flags.shopiy_order_json = json.dumps(shopify_order)
 		so.save(ignore_permissions=True)
@@ -203,17 +204,17 @@ def _get_total_discount(line_item) -> float:
 def get_order_taxes(shopify_order, setting, items):
 	taxes = []
 	line_items = shopify_order.get("line_items")
-
-		   
+	vsaccount=''
+	vcenter=''
 	for line_item in line_items:
 		item_code = get_item_code(line_item)
-																																																																		   
-			   
-																																																															   
-  
-		   
-										   
-								   
+		vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':line_item.get("vendor")}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
+		if not vsett:
+			vsett=frappe.db.get_value('Vendor Account Mapping', {'parent':'Shopify Setting','vendor':['is', 'null']}, ['shipping_revenue_account','vendor_cost_center'], as_dict=1)
+		
+		if vsett:
+			vsaccount=vsett.shipping_revenue_account
+			vcenter=vsett.vendor_cost_center
 		for tax in line_item.get("tax_lines"):
 			taxes.append(
 				{
@@ -224,7 +225,7 @@ def get_order_taxes(shopify_order, setting, items):
 					),
 					"tax_amount": tax.get("price"),
 					"included_in_print_rate": 0,
-					"cost_center": setting.cost_center,
+					"cost_center": vcenter or setting.cost_center,
 					"item_wise_tax_detail": {item_code: [flt(tax.get("rate")) * 100, flt(tax.get("price"))]},
 					"dont_recompute_tax": 1,
 				}
@@ -234,7 +235,7 @@ def get_order_taxes(shopify_order, setting, items):
 		taxes,
 		shopify_order.get("shipping_lines"),
 		setting,
-		items,
+		items, vsaccount, vcenter,
 		taxes_inclusive=shopify_order.get("taxes_included"),
 	)
 
@@ -299,7 +300,7 @@ def get_tax_account_description(tax):
 	return tax_description
 
 
-def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, taxes_inclusive=False):
+def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, vsaccount, vcenter, taxes_inclusive=False):
 	"""Shipping lines represents the shipping details,
 	each such shipping detail consists of a list of tax_lines"""
 	shipping_as_item = cint(setting.add_shipping_as_item) and setting.shipping_item
@@ -316,6 +317,8 @@ def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, taxe
 				shipping_charge_amount -= total_tax
 
 			if shipping_as_item:
+				vsaccount=''
+				vcenter=''
 				items.append(
 					{
 						"item_code": setting.shipping_item,
@@ -333,7 +336,7 @@ def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, taxe
 						"account_head": get_tax_account_head(shipping_charge, charge_type="shipping"),
 						"description": get_tax_account_description(shipping_charge) or shipping_charge["title"],
 						"tax_amount": shipping_charge_amount,
-						"cost_center": setting.cost_center,
+						"cost_center": vcenter or setting.cost_center,
 					}
 				)
 
@@ -341,12 +344,12 @@ def update_taxes_with_shipping_lines(taxes, shipping_lines, setting, items, taxe
 			taxes.append(
 				{
 					"charge_type": "Actual",
-					"account_head": get_tax_account_head(tax, charge_type="sales_tax"),
+					"account_head": vsaccount or get_tax_account_head(tax, charge_type="sales_tax"),
 					"description": (
 						get_tax_account_description(tax) or f"{tax.get('title')} - {tax.get('rate') * 100.0:.2f}%"
 					),
 					"tax_amount": tax["price"],
-					"cost_center": setting.cost_center,
+					"cost_center": vcenter or setting.cost_center,
 					"item_wise_tax_detail": {
 						setting.shipping_item: [flt(tax.get("rate")) * 100, flt(tax.get("price"))]
 					}
@@ -442,149 +445,216 @@ def _fetch_old_orders(from_time, to_time):
 			# avoiding rate limits and reducing resource usage.
 			yield order.to_dict()
 
-									 
-				  
-								 
-									 
-																								 
-										  
-		 
-				 
-																					
+def refund(payload, request_id=None):
+	refunds = payload
+	frappe.set_user("Administrator")
+	frappe.flags.request_id = request_id
+	order_id=frappe.db.get_value("Sales Order", filters={ORDER_ID_FIELD: cstr(refunds["order_id"])})
+	setting = frappe.get_doc(SETTING_DOCTYPE)
+	ermsg=''
+	if not order_id:
+		create_shopify_log(status="Invalid", message="Sales order Not exists, not synced")
+		return
+	try:
 		
-	 
-  
-  
-										
-		   
-												 
-  
+		shipd=refunds.get("order_adjustments")
+		shipamt=0
+		reitem=[]
+		refunditm=[]
+		#gateway=refunds.get("transactions")[0].gateway
+		if setting.add_shipping_as_item:
+			for ship in shipd:
+				if ship.get("reason")=="Shipping refund":
+					shipamt+=float(ship.get("tax_amount")) or 0
+					reitem.append(setting.shipping_item)
+					refunditm.append({"item_code":setting.shipping_item,"amt":float(ship.get("amount")),"tax":float(ship.get("tax_amount")),"qty":1})
+		
+		else:
+			for ship in shipd:
+				if ship.get("reason")=="Shipping refund":
+					shipamt+=(float(ship.get("amount")) or 0) +(float(ship.get("tax_amount")) or 0)
+		
+
+		rline_items=refunds.get("refund_line_items")
+		order=frappe.get_doc("Sales Order",order_id)
+		
+		for rlinei in rline_items:
+			rline=rlinei.get("line_item")
+			tax=rlinei.get('total_tax') or 0
+			subtotal=rlinei.get('subtotal') or 0
+			product_amt=subtotal-tax
+			qty=rline.get("quantity")
+			item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'variant_id':rline.get('variant_id')},'erpnext_item_code')
+			if not item_code and rline.get('sku'):
+				item_code=frappe.db.get_value('Ecommerce Item',{'integration_item_code':rline.get('product_id'),'sku':rline.get('sku')},'erpnext_item_code')
+			reitem.append(item_code)
+			refunditm.append({"item_code":item_code,"amt":product_amt,"tax":tax,"qty":qty})
+		
+		items=[]
+		taxes=[]
+
+		delivary_note=frappe.db.get_value("Delivery Note",{"is_return":0,"shopify_order_id":order.shopify_order_id,"shopify_order_number":order.shopify_order_number},'name')
+		
+		delivarynote_doc=frappe.get_doc("Delivery Note",delivary_note)
+		delivary_note_doc=frappe.copy_doc(delivarynote_doc)
+		
+		for itm in delivary_note_doc.items:
+			if itm.item_code in reitem:
+				#item line
+				itm.update({
+					"name":'',
+					"parent":'',
+					"amount":itm.amount *-1,
+					"base_amount":itm.base_amount *-1,
+					"base_net_amount":itm.base_net_amount *-1,
+					"net_amount":itm.net_amount *-1,
+					"tax_amount":itm.tax_amount *-1,
+					"total_amount":itm.total_amount *-1,
+					"qty":itm.qty *-1,
+					"stock_qty":itm.stock_qty *-1,
+					})
+				items.append(itm)
+		
+
+		if len(items):
+			subtot=0
+			
+			for tx in delivary_note_doc.taxes:			
+				if setting.default_sales_tax_account==tx.account_head:
+					#tax line
+					tax=0
+					for itm in refunditm:
+						tax+=itm.get('tax')
+						subtot+=itm.get('amt')+itm.get('tax')
+
+					tx.update({
+						"name":'',
+						"parent":'',
+						"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"base_total": subtot*-1*delivary_note_doc.conversion_rate,
+						"tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+						"total": subtot*-1,	
+						})
+					taxes.append(tx)
+				else:
+					#shipping line conversion_rate
 					
-											
-																				   
-
-											  
-											  
-		   
-			  
-							
-								
-								   
-									   
-						   
-							
-																																																										   
-										 
-																																																						
-						   
-																				  
-  
-																																																														  
-																
-													 
-		  
-		  
-  
-									 
-							  
-			  
-				
-			   
-				 
-							 
-									   
-											   
-									 
-									 
-										 
-					   
-								   
-	   
-					 
-				
-		   
-										
-														  
-			  
-		  
-						  
-						 
-										   
-
-				
-				
-				  
-																  
-																						
-																
-															 
-																				   
-						  
+					tx.update({
+						"base_tax_amount": shipamt*delivary_note_doc.conversion_rate,
+						"base_tax_amount_after_discount_amount": shipamt*delivary_note_doc.conversion_rate,
+						"base_total": ((subtot*-1)+shipamt)*delivary_note_doc.conversion_rate,
+						"tax_amount": shipamt,
+						"tax_amount_after_discount_amount": shipamt,
+						"total": (subtot*-1)+shipamt,	
+						})
+					taxes.append(tx)
+			
 		
-					 
-		 
-								   
-	 
-				
-																   
-																						 
-																			
-							
-												  
-									
-		
-					 
+			
+			delivary_note_doc.update({
+				"name":'',
+				"naming_series": setting.delivery_note_return_series,
+				"posting_date": getdate(),
+				"posting_time": get_datetime().strftime("%H:%M:%S"),
+				"status":"Draft",
+				"is_return":1,
+				"return_against":delivary_note,
+				"items": items,
+				"taxes": taxes,
+			})
+			
+			
+			ermsg=str(delivary_note_doc.as_dict())
+			dlv = frappe.get_doc(delivary_note_doc)
+			dlv.flags.ignore_mandatory = True
+			dlv.save(ignore_permissions=True)
+			dlv.submit()
+			
+			frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
+			#credit note 
+			from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
-  
-   
-							 
-			  
-														 
-							  
-														
-					 
-				  
-								   
-				   
-				   
-	 
-   
-   
-										 
-										  
-									
-									
-			   
-   
-																			  
-				
-																				   
+			return_invoice = make_sales_invoice(dlv.name)
+			return_invoice.shopify_order_id=order.shopify_order_id
+			return_invoice.shopify_order_number=order.shopify_order_number
+			return_invoice.update({"naming_series":setting.credit_note_series})
+			return_invoice.flags.ignore_mandatory = True
+			return_invoice.is_return = True
+			ermsg=str(return_invoice.as_dict())
+			return_invoice.save()
+			return_invoice.submit()
 
-												
-														 
-																 
-																	   
-								  
-									  
-						
-						  
+			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
+			pentry.reference_no = str(order.shopify_order_number)+" Refund"
+			ordpay=frappe.db.sql(""" select paid_from,paid_to from `tabPayment Entry` where reference_no in (select s.name from `tabSales Invoice Item` i left join `tabSales Invoice` s on i.parent=s.name where s.status="Paid" and i.sales_order="{0}") """.format(order_id),as_dict=1)
+			if len(ordpay):
+				pentry.paid_from=ordpay[0].paid_to
+				pentry.paid_to=ordpay[0].paid_from
+			pentry.update({'reference_date': nowdate()})
+			ermsg=str(pentry.as_dict())
+			pentry.save()
+			pentry.submit()
+		else:
+			create_shopify_log(status="Invalid", message="Sales order item Not exists")
+			return
+			
+	except Exception as e:
+		create_shopify_log(status="Error", exception=e,message=ermsg, rollback=True)
+	else:
+		create_shopify_log(status="Success")
 
-																					 
-																
-																  
-																																																																																																																									 
-				  
-									  
-									  
-											   
-							  
-				
-				  
-	   
-																			  
-		 
-   
-					   
-																			  
-	  
-									  
+def order_edit(payload, request_id=None):
+	order = payload
+	frappe.set_user("Administrator")
+	frappe.flags.request_id = request_id
+	create_shopify_log(status="Success")
+
+def order_update(payload, request_id=None):
+	order = payload
+	frappe.set_user("Administrator")
+	frappe.flags.request_id = request_id
+	create_shopify_log(status="Success")
+
+@temp_shopify_session
+def getall_order_count():
+	shopify_setting = frappe.get_cached_doc(SETTING_DOCTYPE)
+	
+	orders = _fetch_old_orders(shopify_setting.old_orders_from, shopify_setting.old_orders_to)
+	odd='order ids: '
+	for order in orders:
+		odd=odd+str(cstr(order["id"]))
+	#order_count=len(orders)
+	create_shopify_log(method="getall_order_count", status='Success', message=str(odd))
+
+@temp_shopify_session
+def getall_order_custom():
+	shopify_setting = frappe.get_doc('Shopify Setting')
+	shopify_api_key = shopify_setting.shared_secret
+	shopify_api_password = shopify_setting.get_password('password')
+	shopify_store_url = shopify_setting.shopify_url
+
+	from_time = get_datetime(shopify_setting.old_orders_from).astimezone().isoformat()
+	to_time = get_datetime(shopify_setting.old_orders_to).astimezone().isoformat()
+	
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/orders.json"
+	headers = {
+        'Content-Type': 'application/json',
+		"X-Shopify-Access-Token": shopify_api_password
+    }
+	params = {
+		'created_at_min':from_time,
+		'created_at_max':to_time,
+		'financial_status':'paid',
+        'limit': 250,  # Maximum number of orders per page
+    }
+
+	orders = []
+	while True:
+		response = requests.get(api_endpoint, auth=("014c5db001b2b51432e9e8dd4884ed7c", shopify_api_password), headers=headers, params=params)
+		data = response.json()
+		create_shopify_log(method="getall_order_custom", status='Success', message=str(data))        
+		break
+
