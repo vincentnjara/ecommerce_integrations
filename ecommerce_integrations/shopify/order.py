@@ -619,8 +619,8 @@ def refund(payload, request_id=None):
 
 
 			ermsg=str(return_invoice.as_dict())
-			#return_invoice.insert(ignore_mandatory=True)
-			return_invoice.save(ignore_mandatory=True)
+			return_invoice.insert(ignore_mandatory=True)
+			#return_invoice.save()
 			return_invoice.submit()
 
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
