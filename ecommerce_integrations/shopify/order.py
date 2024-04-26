@@ -577,6 +577,8 @@ def refund(payload, request_id=None):
 			#from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 			#return_invoice = make_sales_invoice(dlv.name)
 			from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+			items=[]
+			taxes=[]
 			return_invoice = make_sales_invoice(order_id, ignore_permissions=True)
 			return_invoice.shopify_order_id=order.shopify_order_id
 			return_invoice.shopify_order_number=order.shopify_order_number
@@ -611,6 +613,7 @@ def refund(payload, request_id=None):
 					'tax_amount':itms.tax_amount*-1,
 					'total_amount':itms.total_amount*-1
 					})
+				items.append(itms)
 
 			for taxs in return_invoice.taxes:
 				taxs.update({
@@ -621,8 +624,9 @@ def refund(payload, request_id=None):
 					'tax_amount_after_discount_amount':taxs.tax_amount_after_discount_amount*-1,
 					'total':taxs.total*-1,
 					})
-
-
+				taxes.append(taxs)
+			return_invoice.items= items
+			return_invoice.taxes=taxes
 			ermsg=str(return_invoice.as_dict())
 			return_invoice.insert(ignore_mandatory=True)
 			return_invoice.save()
