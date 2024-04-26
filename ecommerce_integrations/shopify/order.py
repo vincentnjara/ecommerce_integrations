@@ -583,8 +583,44 @@ def refund(payload, request_id=None):
 			return_invoice.update({"naming_series":setting.credit_note_series})
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
+			return_invoice.amount_eligible_for_commission
+
+			return_invoice.base_grand_total=return_invoice.base_grand_total*-1
+			return_invoice.base_net_total=return_invoice.base_net_total*-1
+			return_invoice.base_total=return_invoice.base_total*-1
+			return_invoice.base_total_taxes_and_charges=return_invoice.base_total_taxes_and_charges*-1
+			return_invoice.grand_total=return_invoice.grand_total*-1
+			return_invoice.net_total=return_invoice.net_total*-1
+			return_invoice.total=return_invoice.total*-1
+			return_invoice.total_qty=return_invoice.total_qty*-1
+			return_invoice.total_taxes_and_charges=return_invoice.total_taxes_and_charges*-1
+
+			for itms in return_invoice.items:
+				itms.update({
+					'amount':float(itms.get('amount'))*-1,
+					'base_amount':float(itms.get('base_amount'))*-1,
+					'base_net_amount':float(itms.get('base_net_amount'))*-1,
+					'net_amount':float(itms.get('net_amount'))*-1,
+					'qty':float(itms.get('qty'))*-1,
+					'stock_qty':float(itms.get('stock_qty'))*-1,
+					'tax_amount':float(itms.get('tax_amount'))*-1,
+					'total_amount':float(itms.get('total_amount'))*-1
+					})
+
+			for taxs in return_invoice.taxes:
+				taxs.update({
+					'base_tax_amount':float(itms.get('base_tax_amount'))*-1,
+					'base_tax_amount_after_discount_amount':float(itms.get('base_tax_amount_after_discount_amount'))*-1,
+					'base_total':float(itms.get('base_total'))*-1,
+					'tax_amount':float(itms.get('tax_amount'))*-1,
+					'tax_amount_after_discount_amount':float(itms.get('tax_amount_after_discount_amount'))*-1,
+					'total':float(itms.get('total'))*-1,
+					})
+
+
 			ermsg=str(return_invoice.as_dict())
-			return_invoice.insert(ignore_mandatory=True)
+			#return_invoice.insert(ignore_mandatory=True)
+			return_invoice.save(ignore_mandatory=True)
 			return_invoice.submit()
 
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
