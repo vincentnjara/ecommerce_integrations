@@ -594,7 +594,54 @@ def refund(payload, request_id=None):
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
 			return_invoice.return_against=sales_invoice
+			return_invoice.status='Return'
+			return_invoice.payment_schedule=[]
 			
+			for itms in return_invoice.items:
+				if itms.item_code in reitem:
+					itms.update({
+						'amount':itms.amount*-1,
+						'base_amount':itms.base_amount*-1,
+						'base_net_amount':itms.base_net_amount*-1,
+						'net_amount':itms.net_amount*-1,
+						'qty':itms.qty*-1,
+						'stock_qty':itms.stock_qty*-1,
+						'tax_amount':itms.tax_amount*-1,
+						'total_amount':itms.total_amount*-1
+						})
+					items.append(itms) 
+
+			subtot=0
+			for taxs in return_invoice.taxes:
+				if setting.default_sales_tax_account==tx.account_head:
+					tax=0
+					for itm in refunditm:
+						tax+=itm.get('tax')
+						subtot+=itm.get('amt')+itm.get('tax')
+
+					taxs.update({
+						"base_tax_amount": tax*return_invoice.conversion_rate*-1,
+						"base_tax_amount_after_discount_amount": tax*return_invoice.conversion_rate*-1,
+						"base_total": subtot*-1*return_invoice.conversion_rate,
+						"tax_amount": tax*return_invoice.conversion_rate*-1,
+						"tax_amount_after_discount_amount": tax*return_invoice.conversion_rate*-1,
+						"total": subtot*-1,
+						})
+					taxes.append(taxs)
+				else:
+					taxs.update({
+						"base_tax_amount": shipamt*return_invoice.conversion_rate,
+						"base_tax_amount_after_discount_amount": shipamt*return_invoice.conversion_rate,
+						"base_total": ((subtot*-1)+shipamt)*return_invoice.conversion_rate,
+						"tax_amount": shipamt,
+						"tax_amount_after_discount_amount": shipamt,
+						"total": (subtot*-1)+shipamt,	
+						})
+					taxes.append(taxs)
+
+			return_invoice.items= items
+			return_invoice.taxes=taxes
+			'''
 			return_invoice.amount_eligible_for_commission=return_invoice.amount_eligible_for_commission*-1
 			return_invoice.base_grand_total=return_invoice.base_grand_total*-1
 			return_invoice.base_net_total=return_invoice.base_net_total*-1
@@ -606,36 +653,7 @@ def refund(payload, request_id=None):
 			return_invoice.total_qty=return_invoice.total_qty*-1
 			return_invoice.total_taxes_and_charges=return_invoice.total_taxes_and_charges*-1
 			return_invoice.outstanding_amount=return_invoice.grand_total*-1
-			return_invoice.status='Return'
-			return_invoice.payment_schedule=[]
-			
-			for itms in return_invoice.items:
-				itms.update({
-					'amount':itms.amount*-1,
-					'base_amount':itms.base_amount*-1,
-					'base_net_amount':itms.base_net_amount*-1,
-					'net_amount':itms.net_amount*-1,
-					'qty':itms.qty*-1,
-					'stock_qty':itms.stock_qty*-1,
-					'tax_amount':itms.tax_amount*-1,
-					'total_amount':itms.total_amount*-1
-					})
-				items.append(itms) 
-
-			for taxs in return_invoice.taxes:
-				taxs.update({
-					'base_tax_amount':taxs.base_tax_amount*-1,
-					'base_tax_amount_after_discount_amount':taxs.base_tax_amount_after_discount_amount*-1,
-					'base_total':taxs.base_total*-1,
-					'tax_amount':taxs.tax_amount*-1,
-					'tax_amount_after_discount_amount':taxs.tax_amount_after_discount_amount*-1,
-					'total':taxs.total*-1,
-					})
-				taxes.append(taxs)
-
-			return_invoice.items= items
-			return_invoice.taxes=taxes
-
+			'''
 			inv=frappe.get_doc(return_invoice)
 			ermsg=str(inv.as_dict())
 			inv.save()
