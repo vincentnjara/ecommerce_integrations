@@ -597,24 +597,24 @@ def refund(payload, request_id=None):
 
 			for itms in return_invoice.items:
 				itms.update({
-					'amount':float(itms.get('amount'))*-1,
-					'base_amount':float(itms.get('base_amount'))*-1,
-					'base_net_amount':float(itms.get('base_net_amount'))*-1,
-					'net_amount':float(itms.get('net_amount'))*-1,
-					'qty':float(itms.get('qty'))*-1,
-					'stock_qty':float(itms.get('stock_qty'))*-1,
-					'tax_amount':float(itms.get('tax_amount'))*-1,
-					'total_amount':float(itms.get('total_amount'))*-1
+					'amount':itms.amount*-1,
+					'base_amount':itms.base_amount*-1,
+					'base_net_amount':itms.base_net_amount*-1,
+					'net_amount':itms.net_amount*-1,
+					'qty':itms.qty*-1,
+					'stock_qty':itms.stock_qty*-1,
+					'tax_amount':itms.tax_amount*-1,
+					'total_amount':itms.total_amount*-1
 					})
 
 			for taxs in return_invoice.taxes:
 				taxs.update({
-					'base_tax_amount':float(itms.get('base_tax_amount'))*-1,
-					'base_tax_amount_after_discount_amount':float(itms.get('base_tax_amount_after_discount_amount'))*-1,
-					'base_total':float(itms.get('base_total'))*-1,
-					'tax_amount':float(itms.get('tax_amount'))*-1,
-					'tax_amount_after_discount_amount':float(itms.get('tax_amount_after_discount_amount'))*-1,
-					'total':float(itms.get('total'))*-1,
+					'base_tax_amount':taxs.base_tax_amount*-1,
+					'base_tax_amount_after_discount_amount':taxs.base_tax_amount_after_discount_amount*-1,
+					'base_total':taxs.base_total*-1,
+					'tax_amount':taxs.tax_amount*-1,
+					'tax_amount_after_discount_amount':taxs.tax_amount_after_discount_amount*-1,
+					'total':taxs.total*-1,
 					})
 
 
