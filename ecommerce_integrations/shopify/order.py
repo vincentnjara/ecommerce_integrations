@@ -602,6 +602,7 @@ def refund(payload, request_id=None):
 			return_invoice.outstanding_amount=return_invoice.grand_total*-1
 			return_invoice.status='Return'
 			return_invoice.payment_schedule=[]
+			'''
 			for itms in return_invoice.items:
 				itms.update({
 					'amount':itms.amount*-1,
@@ -613,7 +614,7 @@ def refund(payload, request_id=None):
 					'tax_amount':itms.tax_amount*-1,
 					'total_amount':itms.total_amount*-1
 					})
-				items.append(itms)
+				items.append(itms) '''
 
 			for taxs in return_invoice.taxes:
 				taxs.update({
