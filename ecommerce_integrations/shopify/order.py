@@ -490,89 +490,90 @@ def refund(payload, request_id=None):
 			reitem.append(item_code)
 			refunditm.append({"item_code":item_code,"amt":product_amt,"tax":tax,"qty":qty})
 		
+		#------------------------ return delivary note-----------------------
 		items=[]
 		taxes=[]
 
 		delivary_note=frappe.db.get_value("Delivery Note",{"is_return":0,"shopify_order_id":order.shopify_order_id,"shopify_order_number":order.shopify_order_number},'name')
-		
-		delivarynote_doc=frappe.get_doc("Delivery Note",delivary_note)
-		delivary_note_doc=frappe.copy_doc(delivarynote_doc)
-		
-		for itm in delivary_note_doc.items:
-			if itm.item_code in reitem:
-				#item line
-				itm.update({
-					"name":'',
-					"parent":'',
-					"amount":itm.amount *-1,
-					"base_amount":itm.base_amount *-1,
-					"base_net_amount":itm.base_net_amount *-1,
-					"net_amount":itm.net_amount *-1,
-					"tax_amount":itm.tax_amount *-1,
-					"total_amount":itm.total_amount *-1,
-					"qty":itm.qty *-1,
-					"stock_qty":itm.stock_qty *-1,
-					})
-				items.append(itm)
-		
-
-		if len(items):
-			subtot=0
+		if delivary_note:
+			delivarynote_doc=frappe.get_doc("Delivery Note",delivary_note)
+			delivary_note_doc=frappe.copy_doc(delivarynote_doc)
 			
-			for tx in delivary_note_doc.taxes:			
-				if setting.default_sales_tax_account==tx.account_head:
-					#tax line
-					tax=0
-					for itm in refunditm:
-						tax+=itm.get('tax')
-						subtot+=itm.get('amt')+itm.get('tax')
-
-					tx.update({
+			for itm in delivary_note_doc.items:
+				if itm.item_code in reitem and itm.item_code!=setting.shipping_item:
+					#item line
+					itm.update({
 						"name":'',
 						"parent":'',
-						"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
-						"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
-						"base_total": subtot*-1*delivary_note_doc.conversion_rate,
-						"tax_amount": tax*delivary_note_doc.conversion_rate*-1,
-						"tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
-						"total": subtot*-1,	
+						"amount":itm.amount *-1,
+						"base_amount":itm.base_amount *-1,
+						"base_net_amount":itm.base_net_amount *-1,
+						"net_amount":itm.net_amount *-1,
+						"tax_amount":itm.tax_amount *-1,
+						"total_amount":itm.total_amount *-1,
+						"qty":itm.qty *-1,
+						"stock_qty":itm.stock_qty *-1,
 						})
-					taxes.append(tx)
-				else:
-					#shipping line conversion_rate
-					
-					tx.update({
-						"base_tax_amount": shipamt*delivary_note_doc.conversion_rate,
-						"base_tax_amount_after_discount_amount": shipamt*delivary_note_doc.conversion_rate,
-						"base_total": ((subtot*-1)+shipamt)*delivary_note_doc.conversion_rate,
-						"tax_amount": shipamt,
-						"tax_amount_after_discount_amount": shipamt,
-						"total": (subtot*-1)+shipamt,	
-						})
-					taxes.append(tx)
+					items.append(itm)
+
+			if len(items):
+				subtot=0
+				for tx in delivary_note_doc.taxes:			
+					if setting.default_sales_tax_account==tx.account_head:
+						#tax line
+						tax=0
+						for itm in refunditm:
+							tax+=itm.get('tax')
+							subtot+=itm.get('amt')+itm.get('tax')
+
+						tx.update({
+							"name":'',
+							"parent":'',
+							"base_tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+							"base_tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+							"base_total": subtot*-1*delivary_note_doc.conversion_rate,
+							"tax_amount": tax*delivary_note_doc.conversion_rate*-1,
+							"tax_amount_after_discount_amount": tax*delivary_note_doc.conversion_rate*-1,
+							"total": subtot*-1,	
+							})
+						taxes.append(tx)
+					else:
+						#shipping line conversion_rate
+						
+						tx.update({
+							"base_tax_amount": shipamt*delivary_note_doc.conversion_rate,
+							"base_tax_amount_after_discount_amount": shipamt*delivary_note_doc.conversion_rate,
+							"base_total": ((subtot*-1)+shipamt)*delivary_note_doc.conversion_rate,
+							"tax_amount": shipamt,
+							"tax_amount_after_discount_amount": shipamt,
+							"total": (subtot*-1)+shipamt,	
+							})
+						taxes.append(tx)
+				
 			
-		
-			
-			delivary_note_doc.update({
-				"name":'',
-				"naming_series": setting.delivery_note_return_series,
-				"posting_date": getdate(),
-				"posting_time": get_datetime().strftime("%H:%M:%S"),
-				"status":"Draft",
-				"is_return":1,
-				"return_against":delivary_note,
-				"items": items,
-				"taxes": taxes,
-			})
-			
-			
-			ermsg=str(delivary_note_doc.as_dict())
-			dlv = frappe.get_doc(delivary_note_doc)
-			dlv.flags.ignore_mandatory = True
-			dlv.save(ignore_permissions=True)
-			dlv.submit()
-			
-			frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
+				
+				delivary_note_doc.update({
+					"name":'',
+					"naming_series": setting.delivery_note_return_series,
+					"posting_date": getdate(),
+					"posting_time": get_datetime().strftime("%H:%M:%S"),
+					"status":"Draft",
+					"is_return":1,
+					"return_against":delivary_note,
+					"items": items,
+					"taxes": taxes,
+				})
+				
+				
+				ermsg=str(delivary_note_doc.as_dict())
+				dlv = frappe.get_doc(delivary_note_doc)
+				dlv.flags.ignore_mandatory = True
+				dlv.save(ignore_permissions=True)
+				dlv.submit()
+				
+				frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued') 
+
+		if len(reitem):
 			
 			#----------- credit note-------------------------------
 			items=[]
