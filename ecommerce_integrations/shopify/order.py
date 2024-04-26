@@ -573,11 +573,8 @@ def refund(payload, request_id=None):
 			dlv.submit()
 			
 			frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
-			#credit note 
-			#from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
-			#return_invoice = make_sales_invoice(dlv.name)
-			#from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
-			#return_invoice = make_sales_invoice(order_id, ignore_permissions=True)
+			
+			#----------- credit note-------------------------------
 			items=[]
 			taxes=[]
 			sales_invoice=''
@@ -637,14 +634,15 @@ def refund(payload, request_id=None):
 
 			return_invoice.items= items
 			return_invoice.taxes=taxes
-			
+
 			inv=frappe.get_doc(return_invoice)
 			ermsg=str(inv.as_dict())
 			inv.save()
 			inv.submit()
 			
+			#------------payment entry ---------------------
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
+			pentry=get_payment_entry('Sales Invoice',inv.name)
 			pentry.reference_no = str(order.shopify_order_number)+" Refund"
 			ordpay=frappe.db.sql(""" select paid_from,paid_to from `tabPayment Entry` where reference_no in (select s.name from `tabSales Invoice Item` i left join `tabSales Invoice` s on i.parent=s.name where s.status="Paid" and i.sales_order="{0}") """.format(order_id),as_dict=1)
 			if len(ordpay):
