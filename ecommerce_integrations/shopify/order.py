@@ -613,7 +613,7 @@ def refund(payload, request_id=None):
 
 			subtot=0
 			for taxs in return_invoice.taxes:
-				if setting.default_sales_tax_account==tx.account_head:
+				if setting.default_sales_tax_account==taxs.account_head:
 					tax=0
 					for itm in refunditm:
 						tax+=itm.get('tax')
