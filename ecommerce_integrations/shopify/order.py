@@ -621,7 +621,7 @@ def refund(payload, request_id=None):
 			ermsg=str(return_invoice.as_dict())
 			return_invoice.insert(ignore_mandatory=True)
 			#return_invoice.save()
-			return_invoice.submit()
+			#return_invoice.submit()
 
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
@@ -633,7 +633,7 @@ def refund(payload, request_id=None):
 			pentry.update({'reference_date': nowdate()})
 			ermsg=str(pentry.as_dict())
 			pentry.save()
-			pentry.submit()
+			#pentry.submit()
 		else:
 			create_shopify_log(status="Invalid", message="Sales order item Not exists")
 			return
