@@ -584,6 +584,9 @@ def refund(payload, request_id=None):
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
 			return_invoice.amount_eligible_for_commission
+			sinv=frappe.db.sql(""" select name from `tabSales Invoice` where status="Paid" and shopify_order_id="{0}" and shopify_order_number="{1}" """.format(order.shopify_order_id,order.shopify_order_number),as_dict=1)
+			if len(sinv):
+				return_invoice.return_against=sinv[0].name
 
 			return_invoice.base_grand_total=return_invoice.base_grand_total*-1
 			return_invoice.base_net_total=return_invoice.base_net_total*-1
@@ -594,7 +597,9 @@ def refund(payload, request_id=None):
 			return_invoice.total=return_invoice.total*-1
 			return_invoice.total_qty=return_invoice.total_qty*-1
 			return_invoice.total_taxes_and_charges=return_invoice.total_taxes_and_charges*-1
-
+			return_invoice.outstanding_amount=return_invoice.grand_total*-1
+			return_invoice.status='Return'
+			return_invoice.payment_schedule=[]
 			for itms in return_invoice.items:
 				itms.update({
 					'amount':itms.amount*-1,
@@ -620,9 +625,9 @@ def refund(payload, request_id=None):
 
 			ermsg=str(return_invoice.as_dict())
 			return_invoice.insert(ignore_mandatory=True)
-			#return_invoice.save()
-			#return_invoice.submit()
-			'''
+			return_invoice.save()
+			return_invoice.submit()
+			
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
 			pentry.reference_no = str(order.shopify_order_number)+" Refund"
@@ -633,7 +638,7 @@ def refund(payload, request_id=None):
 			pentry.update({'reference_date': nowdate()})
 			ermsg=str(pentry.as_dict())
 			pentry.save()
-			pentry.submit() '''
+			pentry.submit() 
 		else:
 			create_shopify_log(status="Invalid", message="Sales order item Not exists")
 			return
