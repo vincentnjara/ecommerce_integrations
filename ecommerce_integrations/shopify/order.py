@@ -574,16 +574,17 @@ def refund(payload, request_id=None):
 			
 			frappe.db.set_value("Delivery Note",delivary_note,'status','Return Issued')
 			#credit note 
-			from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
-
-			return_invoice = make_sales_invoice(dlv.name)
+			#from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+			#return_invoice = make_sales_invoice(dlv.name)
+			from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+			return_invoice = make_sales_invoice(order_id, ignore_permissions=True)
 			return_invoice.shopify_order_id=order.shopify_order_id
 			return_invoice.shopify_order_number=order.shopify_order_number
 			return_invoice.update({"naming_series":setting.credit_note_series})
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
 			ermsg=str(return_invoice.as_dict())
-			return_invoice.save()
+			return_invoice.insert(ignore_mandatory=True)
 			return_invoice.submit()
 
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
