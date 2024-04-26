@@ -576,21 +576,72 @@ def refund(payload, request_id=None):
 			#credit note 
 			#from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 			#return_invoice = make_sales_invoice(dlv.name)
-			from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+			#from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+			#return_invoice = make_sales_invoice(order_id, ignore_permissions=True)
 			items=[]
 			taxes=[]
-			return_invoice = make_sales_invoice(order_id, ignore_permissions=True)
+			sales_invoice=''
+			sinv=frappe.db.sql(""" select name from `tabSales Invoice` where status="Paid" and shopify_order_id="{0}" and shopify_order_number="{1}" """.format(order.shopify_order_id,order.shopify_order_number),as_dict=1)
+			if len(sinv):
+				sales_invoice=sinv[0].name
+
+			posting_date = getdate(refunds.get("created_at")) or nowdate()
+			salesinv_doc=frappe.get_doc("Sales Invoice",sales_invoice)
+			return_invoice=frappe.copy_doc(salesinv_doc)
+			return_invoice.name=''
+			return_invoice.posting_date = posting_date
 			return_invoice.shopify_order_id=order.shopify_order_id
 			return_invoice.shopify_order_number=order.shopify_order_number
 			return_invoice.update({"naming_series":setting.credit_note_series})
 			return_invoice.flags.ignore_mandatory = True
 			return_invoice.is_return = True
+			return_invoice.return_against=sales_invoice
 			
+			return_invoice.amount_eligible_for_commission=return_invoice.amount_eligible_for_commission*-1
+			return_invoice.base_grand_total=return_invoice.base_grand_total*-1
+			return_invoice.base_net_total=return_invoice.base_net_total*-1
+			return_invoice.base_total=return_invoice.base_total*-1
+			return_invoice.base_total_taxes_and_charges=return_invoice.base_total_taxes_and_charges*-1
+			return_invoice.grand_total=return_invoice.grand_total*-1
+			return_invoice.net_total=return_invoice.net_total*-1
+			return_invoice.total=return_invoice.total*-1
+			return_invoice.total_qty=return_invoice.total_qty*-1
+			return_invoice.total_taxes_and_charges=return_invoice.total_taxes_and_charges*-1
+			return_invoice.outstanding_amount=return_invoice.grand_total*-1
+			return_invoice.status='Return'
+			return_invoice.payment_schedule=[]
 			
-			ermsg=str(return_invoice.as_dict())
-			return_invoice.insert(ignore_mandatory=True)
-			return_invoice.save()
-			return_invoice.submit()
+			for itms in return_invoice.items:
+				itms.update({
+					'amount':itms.amount*-1,
+					'base_amount':itms.base_amount*-1,
+					'base_net_amount':itms.base_net_amount*-1,
+					'net_amount':itms.net_amount*-1,
+					'qty':itms.qty*-1,
+					'stock_qty':itms.stock_qty*-1,
+					'tax_amount':itms.tax_amount*-1,
+					'total_amount':itms.total_amount*-1
+					})
+				items.append(itms) 
+
+			for taxs in return_invoice.taxes:
+				taxs.update({
+					'base_tax_amount':taxs.base_tax_amount*-1,
+					'base_tax_amount_after_discount_amount':taxs.base_tax_amount_after_discount_amount*-1,
+					'base_total':taxs.base_total*-1,
+					'tax_amount':taxs.tax_amount*-1,
+					'tax_amount_after_discount_amount':taxs.tax_amount_after_discount_amount*-1,
+					'total':taxs.total*-1,
+					})
+				taxes.append(taxs)
+
+			return_invoice.items= items
+			return_invoice.taxes=taxes
+			
+			inv=frappe.get_doc(return_invoice)
+			ermsg=str(inv.as_dict())
+			inv.save()
+			inv.submit()
 			
 			from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 			pentry=get_payment_entry('Sales Invoice',return_invoice.name)
