@@ -467,7 +467,7 @@ def refund(payload, request_id=None):
 				if ship.get("reason")=="Shipping refund":
 					shipamt+=float(ship.get("tax_amount")) or 0
 					reitem.append(setting.shipping_item)
-					refunditm.append({"item_code":setting.shipping_item,"amt":float(ship.get("amount")),"tax":float(ship.get("tax_amount")),"qty":1})
+					refunditm.append({"item_code":setting.shipping_item,"amt":float(ship.get("amount"))*-1,"tax":float(ship.get("tax_amount"))*-1,"qty":1})
 		
 		else:
 			for ship in shipd:
