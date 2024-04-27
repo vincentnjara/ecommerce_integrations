@@ -613,7 +613,7 @@ def refund(payload, request_id=None):
 
 			subtot=0
 			for taxs in return_invoice.taxes:
-				if setting.default_sales_tax_account==taxs.account_head:
+				if setting.add_shipping_as_item:
 					tax=0
 					for itm in refunditm:
 						tax+=itm.get('tax')
@@ -629,31 +629,35 @@ def refund(payload, request_id=None):
 						})
 					taxes.append(taxs)
 				else:
-					taxs.update({
-						"base_tax_amount": shipamt*return_invoice.conversion_rate,
-						"base_tax_amount_after_discount_amount": shipamt*return_invoice.conversion_rate,
-						"base_total": ((subtot*-1)+shipamt)*return_invoice.conversion_rate,
-						"tax_amount": shipamt,
-						"tax_amount_after_discount_amount": shipamt,
-						"total": (subtot*-1)+shipamt,	
-						})
-					taxes.append(taxs)
+					if setting.default_sales_tax_account==taxs.account_head:
+						tax=0
+						for itm in refunditm:
+							tax+=itm.get('tax')
+							subtot+=itm.get('amt')+itm.get('tax')
+
+						taxs.update({
+							"base_tax_amount": tax*return_invoice.conversion_rate*-1,
+							"base_tax_amount_after_discount_amount": tax*return_invoice.conversion_rate*-1,
+							"base_total": subtot*-1*return_invoice.conversion_rate,
+							"tax_amount": tax*return_invoice.conversion_rate*-1,
+							"tax_amount_after_discount_amount": tax*return_invoice.conversion_rate*-1,
+							"total": subtot*-1,
+							})
+						taxes.append(taxs)
+					else:
+						taxs.update({
+							"base_tax_amount": shipamt*return_invoice.conversion_rate,
+							"base_tax_amount_after_discount_amount": shipamt*return_invoice.conversion_rate,
+							"base_total": ((subtot*-1)+shipamt)*return_invoice.conversion_rate,
+							"tax_amount": shipamt,
+							"tax_amount_after_discount_amount": shipamt,
+							"total": (subtot*-1)+shipamt,	
+							})
+						taxes.append(taxs)
 
 			return_invoice.items= items
 			return_invoice.taxes=taxes
-			'''
-			return_invoice.amount_eligible_for_commission=return_invoice.amount_eligible_for_commission*-1
-			return_invoice.base_grand_total=return_invoice.base_grand_total*-1
-			return_invoice.base_net_total=return_invoice.base_net_total*-1
-			return_invoice.base_total=return_invoice.base_total*-1
-			return_invoice.base_total_taxes_and_charges=return_invoice.base_total_taxes_and_charges*-1
-			return_invoice.grand_total=return_invoice.grand_total*-1
-			return_invoice.net_total=return_invoice.net_total*-1
-			return_invoice.total=return_invoice.total*-1
-			return_invoice.total_qty=return_invoice.total_qty*-1
-			return_invoice.total_taxes_and_charges=return_invoice.total_taxes_and_charges*-1
-			return_invoice.outstanding_amount=return_invoice.grand_total*-1
-			'''
+			
 			inv=frappe.get_doc(return_invoice)
 			ermsg=str(inv.as_dict())
 			inv.save()
