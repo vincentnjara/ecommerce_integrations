@@ -565,7 +565,7 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 
 @temp_shopify_session
 def get_product():
-	product_id='7963314815147'
+	product_id='7960270143659'
 	shopify_product = Product.find(product_id)
 	message=str(shopify_product.to_dict())
 	#for variant in shopify_product.variants:
