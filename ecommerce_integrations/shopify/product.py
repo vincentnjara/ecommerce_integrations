@@ -567,8 +567,8 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 def get_product():
 	product_id='7963314815147'
 	shopify_product = Product.find(product_id)
-	message=''
-	for variant in shopify_product.variants:
-		message+=str(variant.sku)+' '+str(variant.id)
+	message=str(shopify_product.to_dict())
+	#for variant in shopify_product.variants:
+	#	message+=str(variant.sku)+' '+str(variant.id)
 		
 	create_shopify_log(status="Success", message=message, method="get_product")
