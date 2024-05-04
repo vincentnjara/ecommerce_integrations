@@ -57,8 +57,8 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 				)
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
 				d.status = "Success"
-				#if d.cost > 0:
-					#update_shopify_product_cost(d.integration_item_code, d.variant_id, d.cost)
+				if d.cost > 0:
+					update_shopify_product_cost(d.integration_item_code, d.variant_id, d.cost)
 			except ResourceNotFound:
 				# Variant or location is deleted, mark as last synced and ignore.
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
