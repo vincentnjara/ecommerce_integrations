@@ -569,5 +569,6 @@ def get_product():
 	shopify_product = Product.find(product_id)
 	message=''
 	for variant in shopify_product.variants:
-		message+=str(variant)
-	create_shopify_log(status="Success", message=message, method="get_product")
+		#message+=str(variant.to_dict())
+		frappe.msgprint(str(variant.to_dict()))
+	#create_shopify_log(status="Success", message=message, method="get_product")
