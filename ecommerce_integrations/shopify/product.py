@@ -573,7 +573,8 @@ def get_product():
 		product_id=pd.integration_item_code
 		shopify_product = Product.find(product_id)
 		for variant in shopify_product.variants:
-			frappe.db.sql("update `tabEcommerce Item` set variant_id_new='{0}' where sku='{1}' and integration_item_code='{2}'".format(variant.id,variant.sku,product_id))
+			if variant.sku:
+				frappe.db.sql("update `tabEcommerce Item` set variant_id_new='{0}' where sku='{1}' and integration_item_code='{2}'".format(variant.id,variant.sku,product_id))
 			
 	frappe.db.sql("SET SQL_SAFE_UPDATES = 1")
 	#create_shopify_log(status="Success", message=message, method="get_product")
