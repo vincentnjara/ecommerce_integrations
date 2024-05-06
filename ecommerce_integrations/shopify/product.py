@@ -566,10 +566,15 @@ def write_upload_log(status: bool, product: Product, item, action="Created") -> 
 @temp_shopify_session
 def get_product():
 	
-	pds=frappe.db.get_all('Ecommerce Item',filters={'has_variants':1},fields=['integration_item_code'])
+	pds=frappe.db.get_all('Ecommerce Item',filters={'has_variants':1,'variant_id_new':['in',['','NULL']]},fields=['integration_item_code','erpnext_item_code'],debug=True)
 	
 	frappe.db.sql("SET SQL_SAFE_UPDATES = 0")
+	cnt=1
 	for pd in pds:
+		cnt+=1
+		if cnt==100:
+			break
+		frappe.db.sql("update `tabEcommerce Item` set variant_id_new='0' where erpnext_item_code='{0}' and integration_item_code='{1}'".format(pd.erpnext_item_code,pd.integration_item_code))
 		product_id=pd.integration_item_code
 		shopify_product = Product.find(product_id)
 		for variant in shopify_product.variants:

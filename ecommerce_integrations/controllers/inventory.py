@@ -31,7 +31,7 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 		values=warehouses + (integration,),
 		as_dict=1,
 	)
-	'''
+	
 	setting = frappe.get_doc('Shopify Setting')
 	times=get_datetime()
 	posting_time=times.strftime("%H:%M:%S")
@@ -45,7 +45,7 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 						"qty": -1 * dt.actual_qty,
                         'company':setting.company
 					})
-		dt.cost=cost or 0 '''
+		dt.cost=cost or 0 
 		
 	return data
 
