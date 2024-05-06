@@ -58,7 +58,7 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
 				d.status = "Success"
 				if d.cost > 0:
-					update_shopify_product_cost(d.integration_item_code, d.variant_id, d.cost)
+					update_shopify_product_cost(inventory_id, d.cost, d.variant_id)
 			except ResourceNotFound:
 				# Variant or location is deleted, mark as last synced and ignore.
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
@@ -71,7 +71,7 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 
 		_log_inventory_update_status(inventory_sync_batch)
 
-def update_shopify_product_cost(shopify_product_id, variant_id, new_cost)-> None:
+def update_shopify_product_cost(inventory_id, new_cost,variant_id)-> None:
 	setting = frappe.get_doc('Shopify Setting')
 	shopify_api_key = setting.shared_secret
 	shopify_api_password = setting.get_password('password')
@@ -81,7 +81,7 @@ def update_shopify_product_cost(shopify_product_id, variant_id, new_cost)-> None
 			"cost": new_cost
 		}
 	}
-	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/inventory_items/{variant_id}.json"
+	api_endpoint = f"https://{shopify_store_url}/admin/api/2024-01/inventory_items/{inventory_id}.json"
 	headers = {
 		"Content-Type": "application/json",
 		"X-Shopify-Access-Token": shopify_api_password
