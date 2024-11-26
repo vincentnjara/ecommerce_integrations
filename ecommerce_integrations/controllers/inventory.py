@@ -36,6 +36,7 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 	times=get_datetime()
 	posting_time=times.strftime("%H:%M:%S")
 	posting_date=getdate(nowdate())
+	raise_error_if_no_rate=False
 	for dt in data:
 		cost=0
 		valrate=frappe.db.get_value('Stock Ledger Entry',{'item_code':dt.item_code,'warehouse':dt.warehouse,'docstatus':1},'valuation_rate') or 0
@@ -47,7 +48,7 @@ def get_inventory_levels(warehouses: Tuple[str], integration: str) -> List[_dict
 							"posting_time": posting_time,
 							"qty": -1 * dt.actual_qty,
 							'company':setting.company
-						}) or valrate
+						},raise_error_if_no_rate) or valrate
 		dt.cost=cost or 0 
 		
 	return data

@@ -52,7 +52,8 @@ def upload_inventory_data_to_shopify(inventory_levels, warehous_map) -> None:
 					location_id=d.shopify_location_id,
 					inventory_item_id=inventory_id,
 					# shopify doesn't support fractional quantity
-					available=cint(d.actual_qty) - cint(d.reserved_qty),
+					#available=cint(d.actual_qty) - cint(d.reserved_qty),
+					available=cint(d.actual_qty),
 					cost=d.cost,
 				)
 				update_inventory_sync_status(d.ecom_item, time=synced_on)
